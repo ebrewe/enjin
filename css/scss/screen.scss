@@ -1,0 +1,26 @@
+$green: #37AB5B;
+
+#preloads{
+  display:none;  
+}
+
+#game {
+  display:block;
+  position:relative;
+  width:90%!important;
+  margin:0 auto;
+  overflow:hidden;
+  -webkit-touch-callout: none;
+  -webkit-user-select: none;
+  -khtml-user-select: none;
+  -moz-user-select: none;
+  -ms-user-select: none;
+  user-select: none;
+  
+  &[data-dragging=true] {
+    cursor: move; 
+  }
+}
+
+
+
