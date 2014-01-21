@@ -32,10 +32,36 @@
       return this.inputHandler = new InputHandler(this.world);
     };
 
+    Game.prototype.update = function(options) {
+      var updates;
+      updates = options != null ? options : false;
+      this.inputHandler.update();
+      return this.world.update(updates);
+    };
+
     Game.prototype.tick = function() {
+      var updates;
       this.now = Date.now();
       this.twixt = this.now - this.then;
-      return this.then = this.now;
+      this.then = this.now;
+      updates = {
+        hud: {
+          frameRate: this.twixt
+        }
+      };
+      return this.update(updates);
+    };
+
+    Game.prototype.initiate = function(levels) {
+      var _this = this;
+      this.levels = levels != null ? levels : [];
+      $(this.world.el).on('mousedown', function() {
+        _this.inputHandler.mouseDown = true;
+        return _this.inputHandler.startClick = _this.then;
+      });
+      return $(this.world.el).on('mouseup', function() {
+        return _this.inputHandler.endDrag();
+      });
     };
 
     return Game;
@@ -102,6 +128,14 @@
       });
     };
 
+    World.prototype.update = function(updates) {
+      var hupdates, _ref;
+      hupdates = (_ref = updates.hud) != null ? _ref : {};
+      if (hupdates.frameRate) {
+        return this.hud.elements.frames.update(hupdates.frameRate);
+      }
+    };
+
     return World;
 
   })();
@@ -146,11 +180,48 @@
       };
     };
 
+    InputHandler.prototype.update = function() {
+      var dX, dY;
+      if (this.mouseDown) {
+        this.checkDrag();
+      }
+      if (this.dragging) {
+        dX = (this.mousePos.x - this.world.scrollX) - (this.dragStart.x - this.world.scrollX);
+        return dY = (this.mousePos.y - this.world.scrollY) - (this.dragStart.y - this.world.scrollY);
+      }
+    };
+
+    InputHandler.prototype.checkDrag = function() {
+      var holding, now;
+      now = new Date();
+      holding = now - this.clickStart;
+      if (holding >= 200) {
+        this.dragging = true;
+        return true;
+      }
+      return false;
+    };
+
+    InputHandler.prototype.startClick = function(time) {
+      this.clickStart = time;
+      return this.dragStart = {
+        x: this.mousePos.x,
+        y: this.mousePos.y
+      };
+    };
+
+    InputHandler.prototype.endDrag = function() {
+      this.mouseDown = false;
+      return this.dragging = false;
+    };
+
     return InputHandler;
 
   })();
 
   HUD = (function() {
+
+    HUD.prototype.elements = {};
 
     function HUD(container, _arg) {
       var element, elements, options, _i, _len, _ref;
@@ -178,7 +249,8 @@
 
     HUD.prototype.createElement = function(element) {
       var el;
-      return el = new HUDElement(element, this.el);
+      el = new HUDElement(element, this.el);
+      return this.elements[element] = el;
     };
 
     return HUD;
@@ -195,6 +267,10 @@
       hud.appendChild(el);
       this.el = el;
     }
+
+    HUDElement.prototype.update = function(updateVal) {
+      return this.el.innerHTML = updateVal;
+    };
 
     return HUDElement;
 

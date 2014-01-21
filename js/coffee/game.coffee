@@ -20,11 +20,27 @@ class Game
 		@world = new World @container, @tileWidth, @tileHeight, @viewWidth, @viewHeight
 		@inputHandler = new InputHandler @world
 	
+	update: (options)->
+		updates = options ? false
+		@inputHandler.update()
+		@world.update(updates)
+	
 	tick: =>
 		@now = Date.now()
 		@twixt = @now - @then #the frame rate
 		@then = @now
+		updates = 
+			hud: {frameRate:@twixt}
+		@update(updates)
 		
+	initiate: (levels) ->
+		@levels = levels ? []
+		
+		$(@world.el).on 'mousedown', ()=>
+			@inputHandler.mouseDown = true
+			@inputHandler.startClick = @then
+		$(@world.el).on 'mouseup', ()=>
+			@inputHandler.endDrag()
 
 ###
 ******************************
@@ -66,6 +82,11 @@ class World
 		
 		@hud = new HUD @container, elements:elements, options:options
 		
+		
+	update: (updates)->
+		hupdates = updates.hud ? {}
+		if hupdates.frameRate
+			@hud.elements.frames.update hupdates.frameRate
 
 class InputHandler
 
@@ -92,8 +113,32 @@ class InputHandler
 		#scroll must account for world scrolls and window scroll for vertical
 		{x: evt.clientX - $(rect).offset().left - @world.scrollX, y: evt.clientY - $(rect).offset().top + wScrollY - @world.scrollY}
 
+	update:->
+		if @mouseDown
+			@checkDrag()
+		if @dragging
+			dX = (@mousePos.x - @world.scrollX ) - (@dragStart.x - @world.scrollX)
+			dY = (@mousePos.y - @world.scrollY ) - (@dragStart.y - @world.scrollY )
+			
+	checkDrag: ->
+		now = new Date()
+		holding = now - @clickStart
+		if holding >= 200
+			@dragging = true
+			return true
+		return false
+		
+	startClick: (time)->
+		@clickStart = time
+		@dragStart = {x:@mousePos.x, y:@mousePos.y}
+	
+	endDrag: ->
+		@mouseDown = false
+		@dragging = false
 
 class HUD
+	
+	elements: {}
 	
 	constructor: (container, {elements, options}={})->
 		@parent = container
@@ -115,6 +160,7 @@ class HUD
 		
 	createElement: (element)->
 		el = new HUDElement element, @el
+		@elements[element] = el
 
 class HUDElement
 
@@ -124,6 +170,9 @@ class HUDElement
 		el.setAttribute('id', element)
 		hud.appendChild(el)
 		@el = el
+		
+	update: (updateVal) ->
+		@el.innerHTML=updateVal;
 
 window.onload = ->
   console.log 'starting'
