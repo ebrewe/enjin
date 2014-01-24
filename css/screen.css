@@ -56,9 +56,6 @@ h6 {
   #game[data-dragging=false] .tile.walkable {
     cursor: pointer; }
 
-.tile.hover {
-  background-position: -22px 0 !important; }
-
 .clearfix {
   zoom: 1; }
   .clearfix:before, .clearfix:after {

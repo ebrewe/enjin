@@ -371,6 +371,11 @@ class Sprite
 		@zIndex = options.zIndex ? 1
 		@z = @zIndex + (@y * @world.tileHeight)
 		@name = options.name ? 'sprite'
+		@current_frame = 0
+		@current_animation = 'standard'
+		@fps = options.fps ? 1000/24
+		@animations = 
+			'standard': ['a0']
 		if @world.debug
 			sprite = document.createElement('div')
 			sprite.setAttribute('id', @name) unless @name == 'sprite'
@@ -392,13 +397,40 @@ class Sprite
 		@z = Math.ceil @zIndex + (@y * @world.tileHeight)
 		@ry = @y + @world.scrollY
 		@rx = @x + @world.scrollX
+	
+	getFrame: (animation)->
+		if !@frameTime then @frameTime = new Date()
+		now = new Date()
+		fr = @current_frame
+		a = @animations[animation]		
 		
+		if now - @frameTime < @fps
+			return @processFrame a[fr]
+		
+		if !a then return {x:0, y:0}
+		if !a[fr] or !a[fr + 1] or a.length <= 1
+			@current_frame = 0
+			return @processFrame a[@current_frame]
+		
+		@current_frame += 1
+		return @processFrame a[@current_frame]
+		
+	processFrame: (aframe)->
+		alpha = ['a','b','c','d','e','f','g','h','i','j','k','l','m','n','o','p','q','r','s','t','u','v','w','x','y','z']
+		c = aframe.substring 0, 1
+		r = aframe.substring(1, aframe.length)
+		ex = parseInt(r) * @w
+		wy = @h * alpha.indexOf c
+		return {x:ex, y:wy}
+	
 	draw: ->
 		if @el
+			bgi = @getFrame(@current_animation)
 			$(@el).css({
 				'z-index': @z
 				'top': @ry + 'px'
 				'left': @rx + 'px'
+				'background-position': '-' + bgi.x + 'px ' + '-' + bgi.y + 'px'
 			})
 
 class Tile extends Sprite
@@ -409,6 +441,7 @@ class Tile extends Sprite
 		@col = options.col ? false
 		super world, x, y, w, h, image, options
 		@flags = []
+		@animations = options.animations ? { 'standard': ['a0'], 'hover': ['a1'], 'selected': ['a2']}
 		@type = if options.type or options.type == 0 then @getType(options.type) else {height:0}
 		@height = @type.height
 		 
@@ -420,9 +453,10 @@ class Tile extends Sprite
 		
 	update: (modifier)->
 		super modifier
+		@current_animation = 'standard'
 		if @flags['hover']
-			$(@el).addClass('hover');
-		@ry += @height 
+			@current_animation = 'hover'
+		@ry += @height * (-@world.tileHeight)
 		
 	draw: ->
 		super
@@ -444,6 +478,15 @@ class Tile extends Sprite
 			return {height: tile}
 		else
 			return {height:0}
+			
+###
+******************************
+THE ASTONISHING ENTITIES CLASSES
+******************************
+###
+
+class Entity extends Sprite
+
 
 ###
 ******************************
