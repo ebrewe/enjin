@@ -223,7 +223,10 @@
           }
         }
         this.createPFGrid(this.cMap);
-        return this.placeTiles();
+        this.placeTiles();
+      }
+      if (this.scene.sprites) {
+        return this.addSprites(this.scene.sprites);
       }
     };
 
@@ -300,6 +303,98 @@
         newInstance[key] = this.clone(obj[key]);
       }
       return newInstance;
+    };
+
+    World.prototype.addSprites = function(sprites) {
+      var spriteGroup, _results;
+      _results = [];
+      for (spriteGroup in sprites) {
+        sprites = sprites[spriteGroup];
+        switch (spriteGroup) {
+          case 'entities':
+            _results.push(this.addEntities(sprites));
+            break;
+          default:
+            _results.push(void 0);
+        }
+      }
+      return _results;
+    };
+
+    World.prototype.addEntities = function(entities) {
+      var animations, coords, ent, entity, h, image, name, offset, speed, w, world, _i, _len, _ref, _ref1, _ref2, _ref3, _ref4, _ref5, _ref6, _ref7, _results;
+      world = this;
+      _results = [];
+      for (_i = 0, _len = entities.length; _i < _len; _i++) {
+        ent = entities[_i];
+        name = (_ref = ent.name) != null ? _ref : false;
+        coords = (_ref1 = ent.coords) != null ? _ref1 : {
+          x: 0,
+          y: 0
+        };
+        coords = this.tileToCoords(coords);
+        w = (_ref2 = ent.width) != null ? _ref2 : this.tileWidth;
+        h = (_ref3 = ent.height) != null ? _ref3 : this.tileHeight;
+        image = (_ref4 = ent.image) != null ? _ref4 : false;
+        animations = (_ref5 = ent.animations) != null ? _ref5 : false;
+        offset = (_ref6 = ent.offset) != null ? _ref6 : false;
+        speed = (_ref7 = ent.speed) != null ? _ref7 : false;
+        entity = new Entity(world, coords.x, coords.y, w, h, image, {
+          name: name,
+          animations: animations,
+          offset: offset,
+          speed: speed
+        });
+        _results.push(this.entities.push(entity));
+      }
+      return _results;
+    };
+
+    World.prototype.tileToCoords = function(coords) {
+      var tile, _i, _len, _ref;
+      if (!coords.x) {
+        coords = {
+          x: coords[0],
+          y: coords[1]
+        };
+      }
+      _ref = this.tiles;
+      for (_i = 0, _len = _ref.length; _i < _len; _i++) {
+        tile = _ref[_i];
+        if (tile.row === ("" + coords.x) && tile.col === ("" + coords.y)) {
+          return {
+            x: tile.x,
+            y: tile.y
+          };
+        }
+      }
+      console.log('no matching tile');
+      return {
+        x: 0,
+        y: 0
+      };
+    };
+
+    World.prototype.coordsToTile = function(coords) {
+      var tile, _i, _len, _ref;
+      if (!coords.x) {
+        coords = {
+          x: coords[0],
+          y: coords[1]
+        };
+      }
+      _ref = this.tiles;
+      for (_i = 0, _len = _ref.length; _i < _len; _i++) {
+        tile = _ref[_i];
+        if (tile.x >= coords.x - 5 && tile.x <= coords.x + 5 && tile.y >= coords.y - 5 && tile.y <= coords.y + 5) {
+          return {
+            x: tile.row,
+            y: tile.col
+          };
+        }
+      }
+      console.log('no matching tile');
+      return false;
     };
 
     World.prototype.scrollQuick = function() {
@@ -606,7 +701,6 @@
       this.zIndex = (_ref1 = options.zIndex) != null ? _ref1 : 1;
       this.z = this.zIndex + (this.y * this.world.tileHeight);
       this.name = (_ref2 = options.name) != null ? _ref2 : 'sprite';
-      console.log(this.name, this.offset);
       this.current_frame = 0;
       this.current_animation = 'standard';
       this.fps = (_ref3 = options.fps) != null ? _ref3 : 1000 / 24;
@@ -709,8 +803,8 @@
       if (!options.name) {
         options.name = 'tile';
       }
-      this.row = (_ref = options.row) != null ? _ref : false;
-      this.col = (_ref1 = options.col) != null ? _ref1 : false;
+      this.row = (_ref = options.row) != null ? _ref : "0";
+      this.col = (_ref1 = options.col) != null ? _ref1 : "0";
       Tile.__super__.constructor.call(this, world, x, y, w, h, image, options);
       this.flags = [];
       this.animations = (_ref2 = options.animations) != null ? _ref2 : {
@@ -801,17 +895,30 @@
     __extends(Entity, _super);
 
     function Entity(world, x, y, w, h, image, options) {
+      var _ref, _ref1;
+      if ((_ref = options.name) == null) {
+        options.name = 'entity';
+      }
+      this.speed = (_ref1 = options.speed) != null ? _ref1 : 0;
+      this.speedX = this.speed;
+      this.speedY = this.speed;
       Entity.__super__.constructor.call(this, world, x, y, w, h, image, options);
-      this.world.entities.push(this);
     }
 
     Entity.prototype.update = function(modifier) {
-      return Entity.__super__.update.call(this, modifier);
+      Entity.__super__.update.call(this, modifier);
+      if (this.world.debug) {
+        return $(this.el).css({
+          'border': '1px solid black'
+        });
+      }
     };
 
     Entity.prototype.draw = function() {
       return Entity.__super__.draw.apply(this, arguments);
     };
+
+    Entity.prototype.moveTo = function(coords) {};
 
     return Entity;
 
@@ -825,12 +932,34 @@
 
 
   window.onload = function() {
-    var bob, game, gameContainer, levelOne, levels, lvOneMap;
+    var game, gameContainer, levelOne, levels, lvOneMap, lvOneSprites, testC;
     console.log('starting');
     lvOneMap = [['x', 'x', 'x', 'x', 'x', 'x', 'x', 'x', 'x', 'x', 'x', 'x', 'x', 'x', 'x', 'x', 'x', 'x', 'x', 'x'], ['x', 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 'x'], ['x', 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 'x'], ['x', 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 'x'], ['x', 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 'x'], ['x', 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 'x'], ['x', 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 'x'], ['x', 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 'x'], ['x', 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 'x'], ['x', 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 'x'], ['x', 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 'x'], ['x', 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 'x'], ['x', 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 'x'], ['x', 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 'x'], ['x', 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 'x'], ['x', 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 'x'], ['x', 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 'x'], ['x', 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 'x'], ['x', 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 'x'], ['x', 'x', 'x', 'x', 'x', 'x', 'x', 'x', 'x', 'x', 'x', 'x', 'x', 'x', 'x', 'x', 'x', 'x', 'x', 'x']];
+    lvOneSprites = {
+      entities: [
+        {
+          name: 'bob',
+          coords: {
+            x: 10,
+            y: 10
+          },
+          width: 44,
+          height: 66,
+          image: 'images/eric.png',
+          animations: {
+            standard: ['a0']
+          },
+          offset: {
+            x: -15,
+            y: 10
+          }
+        }
+      ]
+    };
     levelOne = {
       map: lvOneMap,
       square: true,
+      sprites: lvOneSprites,
       scroll: {
         x: 50,
         y: 100
@@ -843,16 +972,7 @@
     game.start();
     game.world.debug = true;
     game.initiate(levels);
-    return bob = new Entity(game.world, 150, 150, 44, 66, 'images/eric.png', {
-      animations: {
-        'standard': ['a0']
-      },
-      name: 'bob',
-      offset: {
-        x: -15,
-        y: -8
-      }
-    });
+    return testC = [game.world.map.tiles[10][10].x, game.world.map.tiles[10][10].y];
   };
 
 }).call(this);

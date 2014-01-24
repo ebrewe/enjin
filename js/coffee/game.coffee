@@ -135,6 +135,9 @@ class World
 			@createPFGrid(@cMap)
 			
 			@placeTiles()
+			
+		if @scene.sprites then @addSprites @scene.sprites
+			
 
 	createPFGrid: (map)->
 		@grid = new PF.Grid( map[0].length, map.length, map)
@@ -178,6 +181,48 @@ class World
 			newInstance[key] = @clone obj[key]
 
 		newInstance
+		
+	addSprites: (sprites)->
+		for spriteGroup, sprites of sprites
+			switch spriteGroup
+				when 'entities'
+					@addEntities (sprites)
+		
+	addEntities: (entities)->
+		world = this
+		for ent in entities
+			name = ent.name ? false
+			coords = ent.coords ? {x:0, y:0}
+			coords = @tileToCoords coords
+			w = ent.width ? @tileWidth
+			h = ent.height ? @tileHeight
+			image = ent.image ? false
+			animations = ent.animations ? false
+			offset = ent.offset ? false
+			speed = ent.speed ? false
+			
+			entity = new Entity world, coords.x, coords.y, w, h, image, {name: name, animations: animations, offset: offset, speed: speed}
+			@entities.push entity
+	
+	
+	tileToCoords: (coords) ->
+		if !coords.x
+			coords = {x: coords[0], y: coords[1]}
+		for tile in @tiles
+			#must convert coords to string
+			if tile.row == "#{coords.x}" and tile.col == "#{coords.y}"
+				return  {x:tile.x, y:tile.y}
+		console.log 'no matching tile'
+		return {x:0, y:0}
+		
+	coordsToTile: (coords) ->
+		if !coords.x 
+			coords = {x: coords[0], y: coords[1]}
+		for tile in @tiles
+			if tile.x >= coords.x - 5 and tile.x <= coords.x + 5 and tile.y >= coords.y - 5 and tile.y <= coords.y + 5
+			  return {x: tile.row, y: tile.col}
+		console.log 'no matching tile'
+		return false
 		
 	scrollQuick: ->
 		if Math.abs(@scrollX - @scrollTarget.x) <= @tileWidth
@@ -373,7 +418,6 @@ class Sprite
 		@zIndex = options.zIndex ? 1
 		@z = @zIndex + (@y * @world.tileHeight)
 		@name = options.name ? 'sprite'
-		console.log @name, @offset
 		@current_frame = 0
 		@current_animation = 'standard'
 		@fps = options.fps ? 1000/24
@@ -443,8 +487,8 @@ class Tile extends Sprite
 
 	constructor:( world, x, y, w, h, image, options)->
 		if !options.name then options.name = 'tile'
-		@row = options.row ? false
-		@col = options.col ? false
+		@row = options.row ? "0"
+		@col = options.col  ? "0"
 		super world, x, y, w, h, image, options
 		@flags = []
 		@animations = options.animations ? { 'standard': ['a0'], 'hover': ['a1'], 'selected': ['a2']}
@@ -494,15 +538,22 @@ THE ASTONISHING ENTITIES CLASSES
 class Entity extends Sprite
 
 	constructor: (world, x, y, w, h, image, options)->
+		options.name?= 'entity' 
+		@speed = options.speed ? 0
+		@speedX = @speed
+		@speedY = @speed
 		super world, x, y, w, h, image, options
-		@world.entities.push this
 		
 	update: (modifier)->
 		super modifier
+		if @world.debug
+		  $(@el).css({'border':'1px solid black'})
 	
 	draw: ->
 		super
 	
+	moveTo: (coords)->
+		
 
 ###
 ******************************
@@ -534,9 +585,13 @@ window.onload = ->
 		['x',0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,'x'],
 		['x','x','x','x','x','x','x','x','x','x','x','x','x','x','x','x','x','x','x','x'],
 	]
+	lvOneSprites = 
+		entities: [{ name: 'bob', coords:{x:10, y:10}, width: 44, height:66, image: 'images/eric.png', animations:{standard:['a0']}, offset: {x:-15, y:10}}]
+	
 	levelOne = 
 		map: lvOneMap
 		square: true
+		sprites: lvOneSprites
 		scroll: {x:50, y:100}
 		hud: ['frames', 'center']
   
@@ -547,5 +602,4 @@ window.onload = ->
 	game.start() 
 	game.world.debug = true
 	game.initiate levels
-	
-	bob = new Entity game.world, 150, 150, 44, 66, 'images/eric.png', {animations: { 'standard': ['a0']}, name: 'bob', offset: {x:-15, y:-8}}
+	testC = [game.world.map.tiles[10][10].x, game.world.map.tiles[10][10].y]
