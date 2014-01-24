@@ -125,8 +125,10 @@ class World
 			@cMap =@scene.map
 			for row in @cMap
 				for tile in row
-					if row[tile] is not 0 
+					if row[tile] == 'x' 
 						row[tile] = 1
+					else
+						row[tile] = 0
 
 			@createPFGrid(@cMap)
 			
@@ -143,7 +145,7 @@ class World
 			for rIndex, row of m
 				for cIndex, column of row
 					tile = @map.tiles[rIndex][cIndex]
-					tile.tile = new Tile world, tile.x, tile.y, @tileWidth, @tileWidth, @map.image, {row: rIndex, col:cIndex}
+					tile.tile = new Tile world, tile.x, tile.y, @tileWidth, @tileWidth, @map.image, {row: rIndex, col:cIndex, type:tile.type}
 					@tiles.push tile.tile
 					
 	makePath: (start, end)->
@@ -250,7 +252,7 @@ class InputHandler
 		#scroll must account for world scrolls and window scroll for vertical
 		{x: evt.clientX - $(rect).offset().left, y: evt.clientY - $(rect).offset().top + wScrollY }
 
-	update:->
+	update:=>
 		if @world.tiles
 			@hovering = false
 			for tile in @world.tiles
@@ -407,6 +409,9 @@ class Tile extends Sprite
 		@col = options.col ? false
 		super world, x, y, w, h, image, options
 		@flags = []
+		@type = if options.type or options.type == 0 then @getType(options.type) else {height:0}
+		@height = @type.height
+		 
 		if @el
 			$(@el).css({
 				'background': 'url(' + @image + ') no-repeat 0 0'
@@ -417,11 +422,12 @@ class Tile extends Sprite
 		super modifier
 		if @flags['hover']
 			$(@el).addClass('hover');
-		
+		@ry += @height 
 		
 	draw: ->
 		super
-		
+
+
 	setFlags: (flags)->
 		for flag in flags
 			@flags[flag] = true
@@ -431,6 +437,13 @@ class Tile extends Sprite
 		for flag in flags
 			@flags[flag] = false
 			if @el then $(@el).removeClass(flag)
+			
+	getType: (tile)->
+		if isFinite(tile)
+			@setFlags ['walkable']
+			return {height: tile}
+		else
+			return {height:0}
 
 ###
 ******************************
@@ -441,26 +454,26 @@ THE MIND-BOGGLING KICK-OFF CODE
 window.onload = ->
 	console.log 'starting'
 	lvOneMap = [
-		[1,1,1,1,1,1,1,1,1,1,1,1,1,1,1,1,1,1,1,1],
-		[1,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,1],
-		[1,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,1],
-		[1,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,1],
-		[1,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,1],
-		[1,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,1],
-		[1,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,1],
-		[1,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,1],
-		[1,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,1],
-		[1,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,1],
-		[1,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,1],
-		[1,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,1],
-		[1,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,1],
-		[1,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,1],
-		[1,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,1],
-		[1,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,1],
-		[1,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,1],
-		[1,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,1],
-		[1,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,1],
-		[1,1,1,1,1,1,1,1,1,1,1,1,1,1,1,1,1,1,1,1],
+		['x','x','x','x','x','x','x','x','x','x','x','x','x','x','x','x','x','x','x','x'],
+		['x',0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,'x'],
+		['x',0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,'x'],
+		['x',0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,'x'],
+		['x',0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,'x'],
+		['x',0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,'x'],
+		['x',0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,'x'],
+		['x',0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,'x'],
+		['x',0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,'x'],
+		['x',0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,'x'],
+		['x',0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,'x'],
+		['x',0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,'x'],
+		['x',0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,'x'],
+		['x',0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,'x'],
+		['x',0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,'x'],
+		['x',0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,'x'],
+		['x',0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,'x'],
+		['x',0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,'x'],
+		['x',0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,'x'],
+		['x','x','x','x','x','x','x','x','x','x','x','x','x','x','x','x','x','x','x','x'],
 	]
 	levelOne = 
 		map: lvOneMap

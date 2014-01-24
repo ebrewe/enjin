@@ -40,8 +40,21 @@ h6 {
   width: 90%;
   margin: 0 auto; }
 
-#center:hover {
-  background-position: -50px 0 !important; }
+#center {
+  background-color: #d9d9d9 !important;
+  border-radius: 50px;
+  -webkit-transition: background-color 0.1s linear;
+  -moz-transition: background-color 0.1s linear;
+  -o-transition: background-color 0.1s linear;
+  -ms-transition: background-color 0.1s linear; }
+  #center:hover {
+    background-position: -50px 0 !important;
+    background-color: #4db9ee !important; }
+
+#game[data-dragging=false] .tile {
+  cursor: not-allowed; }
+  #game[data-dragging=false] .tile.walkable {
+    cursor: pointer; }
 
 .tile.hover {
   background-position: -22px 0 !important; }
