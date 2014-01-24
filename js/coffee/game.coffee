@@ -257,7 +257,9 @@ class InputHandler
 				tile.clearFlags ['hover']
 				if @mousePos.x >= tile.rx and @mousePos.x <= tile.rx + tile.w and @mousePos.y >= tile.ry and @mousePos.y <= tile.ry + tile.h
 					@hovering = tile
-					tile.setFlags ['hover']
+				
+		if @hovering
+			@hovering.setFlags ['hover']
 				
 		if @clicked then console.log @mousePos.x, @mousePos.y, @world.tiles
 			

@@ -422,9 +422,11 @@
           tile.clearFlags(['hover']);
           if (this.mousePos.x >= tile.rx && this.mousePos.x <= tile.rx + tile.w && this.mousePos.y >= tile.ry && this.mousePos.y <= tile.ry + tile.h) {
             this.hovering = tile;
-            tile.setFlags(['hover']);
           }
         }
+      }
+      if (this.hovering) {
+        this.hovering.setFlags(['hover']);
       }
       if (this.clicked) {
         console.log(this.mousePos.x, this.mousePos.y, this.world.tiles);
