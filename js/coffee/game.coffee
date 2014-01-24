@@ -539,7 +539,9 @@ THE ASTONISHING ENTITIES CLASSES
 ###
 
 class Entity extends Sprite
-
+	vx:0
+	vy:0
+	
 	constructor: (world, x, y, w, h, image, options)->
 		options.name?= 'entity' 
 		@speed = if options.speed and options.speed > 0 then options.speed else 3
@@ -548,6 +550,26 @@ class Entity extends Sprite
 		super world, x, y, w, h, image, options
 		
 	update: (modifier)->
+	
+		@vx = 0
+		@vy = 0
+		
+		if @target and @targetCoords
+			if @reasonablyNear @targetCoords
+				@path.shift()
+				if @path.length > 1
+					 @setPath @path[ @path.length - 1] 
+					 @moveTo @targetCoords
+				else
+					@path = false
+					@stopMoving()
+					
+			else @moveTo @targetCoords
+		
+		@x += @vx
+		@y += @vy
+		
+			
 		super modifier
 		if @world.debug
 		  $(@el).css({'border':'1px solid black'})
@@ -555,14 +577,37 @@ class Entity extends Sprite
 	draw: ->
 		super
 	
-	moveTo: (coords)->
+	setPath: (coords)->
 		start = @world.coordsToTile [@x, @y]
 		end = if coords.x then coords else {x:coords[0], y:coords[1]}
 		gridClone = @world.clone @world.grid
-		path = @world.finder.findPath start.x,start.y, end.x, end.y, gridClone
-		for tile in path
-			#console.log @world.map.tiles[tile[0]][tile[1]]
-			@world.map.tiles[tile[0]][tile[1]].tile.setFlags ['path']
+		@path = @world.finder.findPath start.x,start.y, end.x, end.y, gridClone
+		@target = @path[1] ? false
+		@targetCoords = if @target then @world.tileToCoords [@target[0],@target[1]] else false
+		
+	moveTo: (coords)->
+		target = if coords.x then coords else {x:coords[0], y:coords[1]}
+		dx = @x - target.x
+		dy = @y - target.y
+		
+		
+		@vx = if dx > 0 then -@speedX else @speedX
+		@vy = if dy > 0 then -@speedY else @speedY
+		
+		if Math.abs(dx) < 2 then @vx = 0  
+		if Math.abs(dy) < 2 then @vy = 0
+		
+	stopMoving: ->
+		@vx = 0
+		@vy = 0
+		@target = false
+		@targetCoords = false
+		
+	reasonablyNear: (target)->
+		coords = if target.x then target else {x:target[0], y:target[1]}
+		if @x >= coords.x - 2 and @x <= coords.x + 2 and @y >= coords.y - 2 and @y <= coords.y + 2
+			return true
+		return false
 
 ###
 ******************************
@@ -613,5 +658,5 @@ window.onload = ->
 	game.initiate levels
 	
 	bob = game.world.entities[0]
-	console.log bob.moveTo [5,5]
+	bob.setPath [18,18]
 	

@@ -899,6 +899,10 @@
 
     __extends(Entity, _super);
 
+    Entity.prototype.vx = 0;
+
+    Entity.prototype.vy = 0;
+
     function Entity(world, x, y, w, h, image, options) {
       var _ref;
       if ((_ref = options.name) == null) {
@@ -911,6 +915,24 @@
     }
 
     Entity.prototype.update = function(modifier) {
+      this.vx = 0;
+      this.vy = 0;
+      if (this.target && this.targetCoords) {
+        if (this.reasonablyNear(this.targetCoords)) {
+          this.path.shift();
+          if (this.path.length > 1) {
+            this.setPath(this.path[this.path.length - 1]);
+            this.moveTo(this.targetCoords);
+          } else {
+            this.path = false;
+            this.stopMoving();
+          }
+        } else {
+          this.moveTo(this.targetCoords);
+        }
+      }
+      this.x += this.vx;
+      this.y += this.vy;
       Entity.__super__.update.call(this, modifier);
       if (this.world.debug) {
         return $(this.el).css({
@@ -923,21 +945,54 @@
       return Entity.__super__.draw.apply(this, arguments);
     };
 
-    Entity.prototype.moveTo = function(coords) {
-      var end, gridClone, path, start, tile, _i, _len, _results;
+    Entity.prototype.setPath = function(coords) {
+      var end, gridClone, start, _ref;
       start = this.world.coordsToTile([this.x, this.y]);
       end = coords.x ? coords : {
         x: coords[0],
         y: coords[1]
       };
       gridClone = this.world.clone(this.world.grid);
-      path = this.world.finder.findPath(start.x, start.y, end.x, end.y, gridClone);
-      _results = [];
-      for (_i = 0, _len = path.length; _i < _len; _i++) {
-        tile = path[_i];
-        _results.push(this.world.map.tiles[tile[0]][tile[1]].tile.setFlags(['path']));
+      this.path = this.world.finder.findPath(start.x, start.y, end.x, end.y, gridClone);
+      this.target = (_ref = this.path[1]) != null ? _ref : false;
+      return this.targetCoords = this.target ? this.world.tileToCoords([this.target[0], this.target[1]]) : false;
+    };
+
+    Entity.prototype.moveTo = function(coords) {
+      var dx, dy, target;
+      target = coords.x ? coords : {
+        x: coords[0],
+        y: coords[1]
+      };
+      dx = this.x - target.x;
+      dy = this.y - target.y;
+      this.vx = dx > 0 ? -this.speedX : this.speedX;
+      this.vy = dy > 0 ? -this.speedY : this.speedY;
+      if (Math.abs(dx) < 2) {
+        this.vx = 0;
       }
-      return _results;
+      if (Math.abs(dy) < 2) {
+        return this.vy = 0;
+      }
+    };
+
+    Entity.prototype.stopMoving = function() {
+      this.vx = 0;
+      this.vy = 0;
+      this.target = false;
+      return this.targetCoords = false;
+    };
+
+    Entity.prototype.reasonablyNear = function(target) {
+      var coords;
+      coords = target.x ? target : {
+        x: target[0],
+        y: target[1]
+      };
+      if (this.x >= coords.x - 2 && this.x <= coords.x + 2 && this.y >= coords.y - 2 && this.y <= coords.y + 2) {
+        return true;
+      }
+      return false;
     };
 
     return Entity;
@@ -993,7 +1048,7 @@
     game.world.debug = true;
     game.initiate(levels);
     bob = game.world.entities[0];
-    return console.log(bob.moveTo([5, 5]));
+    return bob.setPath([18, 18]);
   };
 
 }).call(this);
