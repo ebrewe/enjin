@@ -141,7 +141,7 @@ class World
 
 	createPFGrid: (map)->
 		@grid = new PF.Grid( map[0].length, map.length, map)
-		@finder = new PF.BreadthFirstFinder({allowDiagonal: true})
+		@finder = new PF.BestFirstFinder({allowDiagonal: true})
 		
 	placeTiles: ->
 		world = this
@@ -150,7 +150,7 @@ class World
 			for rIndex, row of m
 				for cIndex, column of row
 					tile = @map.tiles[rIndex][cIndex]
-					tile.tile = new Tile world, tile.x, tile.y, @tileWidth, @tileWidth, @map.image, {row: rIndex, col:cIndex, type:tile.type, offset:{x:0, y:22}, render:true}
+					tile.tile = new Tile world, tile.x, tile.y, @tileWidth, @tileWidth, @map.image, {row: rIndex, col:cIndex, type:tile.type, offset:{x:0, y:22}, render:false}
 					@tiles.push tile.tile
 					
 	makePath: (start, end)->
@@ -546,7 +546,7 @@ class Entity extends Sprite
 		options.name?= 'entity' 
 		@speed = if options.speed and options.speed > 0 then options.speed else 3
 		@speedX = @speed
-		@speedY = @speed
+		@speedY = @speed / 2
 		super world, x, y, w, h, image, options
 		
 	update: (modifier)->
@@ -580,6 +580,7 @@ class Entity extends Sprite
 	setPath: (coords)->
 		start = @world.coordsToTile [@x, @y]
 		end = if coords.x then coords else {x:coords[0], y:coords[1]}
+		
 		gridClone = @world.clone @world.grid
 		@path = @world.finder.findPath start.x,start.y, end.x, end.y, gridClone
 		@target = @path[1] ? false
@@ -640,7 +641,8 @@ window.onload = ->
 		['x','x','x','x','x','x','x','x','x','x','x','x','x','x','x','x','x','x','x','x'],
 	]
 	lvOneSprites = 
-		entities: [{ name: 'bob', coords:{x:10, y:10}, width: 44, height:66, image: 'images/eric.png', animations:{standard:['a0']}, offset: {x:-15, y:10}}]
+		entities: [{ name: 'bob', coords:{x:10, y:10}, width: 44, height:66, image: 'images/eric.png', speed:2, animations:{standard:['a0']}, offset: {x:-15, y:10}},
+		{ name: 'boby', coords:{x:15, y:10}, width: 44, height:66, image: 'images/eric.png', speed:2, animations:{standard:['a0']}, offset: {x:-15, y:10}}]
 	
 	levelOne = 
 		map: lvOneMap
@@ -658,5 +660,7 @@ window.onload = ->
 	game.initiate levels
 	
 	bob = game.world.entities[0]
-	bob.setPath [18,18]
+	bob.setPath [18,1]
+	bob = game.world.entities[1]
+	bob.setPath [1,15]
 	

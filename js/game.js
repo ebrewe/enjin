@@ -232,7 +232,7 @@
 
     World.prototype.createPFGrid = function(map) {
       this.grid = new PF.Grid(map[0].length, map.length, map);
-      return this.finder = new PF.BreadthFirstFinder({
+      return this.finder = new PF.BestFirstFinder({
         allowDiagonal: true
       });
     };
@@ -259,7 +259,7 @@
                   x: 0,
                   y: 22
                 },
-                render: true
+                render: false
               });
               _results1.push(this.tiles.push(tile.tile));
             }
@@ -910,7 +910,7 @@
       }
       this.speed = options.speed && options.speed > 0 ? options.speed : 3;
       this.speedX = this.speed;
-      this.speedY = this.speed;
+      this.speedY = this.speed / 2;
       Entity.__super__.constructor.call(this, world, x, y, w, h, image, options);
     }
 
@@ -1021,6 +1021,24 @@
           width: 44,
           height: 66,
           image: 'images/eric.png',
+          speed: 2,
+          animations: {
+            standard: ['a0']
+          },
+          offset: {
+            x: -15,
+            y: 10
+          }
+        }, {
+          name: 'boby',
+          coords: {
+            x: 15,
+            y: 10
+          },
+          width: 44,
+          height: 66,
+          image: 'images/eric.png',
+          speed: 2,
           animations: {
             standard: ['a0']
           },
@@ -1048,7 +1066,9 @@
     game.world.debug = true;
     game.initiate(levels);
     bob = game.world.entities[0];
-    return bob.setPath([18, 18]);
+    bob.setPath([18, 1]);
+    bob = game.world.entities[1];
+    return bob.setPath([1, 15]);
   };
 
 }).call(this);
