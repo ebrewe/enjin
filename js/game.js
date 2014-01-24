@@ -140,7 +140,7 @@
     };
 
     World.prototype.update = function(updates) {
-      var hupdates, tile, _i, _len, _ref, _ref1;
+      var ent, hupdates, tile, _i, _j, _len, _len1, _ref, _ref1, _ref2;
       hupdates = (_ref = updates.hud) != null ? _ref : {};
       if (hupdates.frameRate) {
         this.hud.elements.frames.update(hupdates.frameRate);
@@ -152,22 +152,32 @@
           tile.update();
         }
       }
+      _ref2 = this.entities;
+      for (_j = 0, _len1 = _ref2.length; _j < _len1; _j++) {
+        ent = _ref2[_j];
+        ent.update();
+      }
       if (this.quickScroll) {
         return this.scrollQuick();
       }
     };
 
     World.prototype.draw = function() {
-      var tile, _i, _len, _ref, _results;
+      var ent, tile, _i, _j, _len, _len1, _ref, _ref1, _results;
       if (this.tiles) {
         _ref = this.tiles;
-        _results = [];
         for (_i = 0, _len = _ref.length; _i < _len; _i++) {
           tile = _ref[_i];
-          _results.push(tile.draw());
+          tile.draw();
         }
-        return _results;
       }
+      _ref1 = this.entities;
+      _results = [];
+      for (_j = 0, _len1 = _ref1.length; _j < _len1; _j++) {
+        ent = _ref1[_j];
+        _results.push(ent.draw());
+      }
+      return _results;
     };
 
     World.prototype.doScene = function(scene) {
@@ -239,7 +249,12 @@
               tile.tile = new Tile(world, tile.x, tile.y, this.tileWidth, this.tileWidth, this.map.image, {
                 row: rIndex,
                 col: cIndex,
-                type: tile.type
+                type: tile.type,
+                offset: {
+                  x: 0,
+                  y: 22
+                },
+                render: true
               });
               _results1.push(this.tiles.push(tile.tile));
             }
@@ -577,7 +592,7 @@
   Sprite = (function() {
 
     function Sprite(world, x, y, w, h, image, options) {
-      var sprite, _ref, _ref1, _ref2, _ref3;
+      var sprite, _ref, _ref1, _ref2, _ref3, _ref4;
       this.world = world;
       this.x = x;
       this.y = y;
@@ -591,13 +606,15 @@
       this.zIndex = (_ref1 = options.zIndex) != null ? _ref1 : 1;
       this.z = this.zIndex + (this.y * this.world.tileHeight);
       this.name = (_ref2 = options.name) != null ? _ref2 : 'sprite';
+      console.log(this.name, this.offset);
       this.current_frame = 0;
       this.current_animation = 'standard';
       this.fps = (_ref3 = options.fps) != null ? _ref3 : 1000 / 24;
+      this.render = (_ref4 = options.render) != null ? _ref4 : true;
       this.animations = {
         'standard': ['a0']
       };
-      if (this.world.debug) {
+      if (this.render) {
         sprite = document.createElement('div');
         if (this.name !== 'sprite') {
           sprite.setAttribute('id', this.name);
@@ -615,7 +632,9 @@
           'left': this.x + 'px',
           'width': this.w + 'px',
           'height': this.h + 'px',
-          'z-index': Math.ceil(this.z)
+          'z-index': Math.ceil(this.z),
+          'background-image': 'url(' + this.image + ')',
+          'background-repeat': 'no-repeat'
         });
       }
     }
@@ -670,8 +689,8 @@
         bgi = this.getFrame(this.current_animation);
         return $(this.el).css({
           'z-index': this.z,
-          'top': this.ry + 'px',
-          'left': this.rx + 'px',
+          'top': (this.ry - this.h + this.offset.y) + 'px',
+          'left': (this.rx + this.offset.x) + 'px',
           'background-position': '-' + bgi.x + 'px ' + '-' + bgi.y + 'px'
         });
       }
@@ -781,9 +800,18 @@
 
     __extends(Entity, _super);
 
-    function Entity() {
-      return Entity.__super__.constructor.apply(this, arguments);
+    function Entity(world, x, y, w, h, image, options) {
+      Entity.__super__.constructor.call(this, world, x, y, w, h, image, options);
+      this.world.entities.push(this);
     }
+
+    Entity.prototype.update = function(modifier) {
+      return Entity.__super__.update.call(this, modifier);
+    };
+
+    Entity.prototype.draw = function() {
+      return Entity.__super__.draw.apply(this, arguments);
+    };
 
     return Entity;
 
@@ -797,7 +825,7 @@
 
 
   window.onload = function() {
-    var game, gameContainer, levelOne, levels, lvOneMap;
+    var bob, game, gameContainer, levelOne, levels, lvOneMap;
     console.log('starting');
     lvOneMap = [['x', 'x', 'x', 'x', 'x', 'x', 'x', 'x', 'x', 'x', 'x', 'x', 'x', 'x', 'x', 'x', 'x', 'x', 'x', 'x'], ['x', 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 'x'], ['x', 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 'x'], ['x', 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 'x'], ['x', 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 'x'], ['x', 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 'x'], ['x', 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 'x'], ['x', 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 'x'], ['x', 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 'x'], ['x', 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 'x'], ['x', 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 'x'], ['x', 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 'x'], ['x', 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 'x'], ['x', 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 'x'], ['x', 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 'x'], ['x', 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 'x'], ['x', 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 'x'], ['x', 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 'x'], ['x', 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 'x'], ['x', 'x', 'x', 'x', 'x', 'x', 'x', 'x', 'x', 'x', 'x', 'x', 'x', 'x', 'x', 'x', 'x', 'x', 'x', 'x']];
     levelOne = {
@@ -814,7 +842,17 @@
     game = new Game(gameContainer, 11);
     game.start();
     game.world.debug = true;
-    return game.initiate(levels);
+    game.initiate(levels);
+    return bob = new Entity(game.world, 150, 150, 44, 66, 'images/eric.png', {
+      animations: {
+        'standard': ['a0']
+      },
+      name: 'bob',
+      offset: {
+        x: -15,
+        y: -8
+      }
+    });
   };
 
 }).call(this);

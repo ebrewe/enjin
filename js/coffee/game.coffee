@@ -94,12 +94,14 @@ class World
 			@hud.elements.frames.update hupdates.frameRate
 		if @tiles
 			tile.update() for tile in @tiles
+		ent.update() for ent in @entities
 			
 		if @quickScroll then @scrollQuick() 
 			
 	draw: ->
 		if @tiles
 			tile.draw() for tile in @tiles
+		ent.draw() for ent in @entities
 			
 	doScene: (scene)->
 		@scene = scene ? {}
@@ -145,7 +147,7 @@ class World
 			for rIndex, row of m
 				for cIndex, column of row
 					tile = @map.tiles[rIndex][cIndex]
-					tile.tile = new Tile world, tile.x, tile.y, @tileWidth, @tileWidth, @map.image, {row: rIndex, col:cIndex, type:tile.type}
+					tile.tile = new Tile world, tile.x, tile.y, @tileWidth, @tileWidth, @map.image, {row: rIndex, col:cIndex, type:tile.type, offset:{x:0, y:22}, render:true}
 					@tiles.push tile.tile
 					
 	makePath: (start, end)->
@@ -371,12 +373,14 @@ class Sprite
 		@zIndex = options.zIndex ? 1
 		@z = @zIndex + (@y * @world.tileHeight)
 		@name = options.name ? 'sprite'
+		console.log @name, @offset
 		@current_frame = 0
 		@current_animation = 'standard'
 		@fps = options.fps ? 1000/24
+		@render = options.render ? true
 		@animations = 
 			'standard': ['a0']
-		if @world.debug
+		if @render
 			sprite = document.createElement('div')
 			sprite.setAttribute('id', @name) unless @name == 'sprite'
 			sprite.className += 'sprite ' 
@@ -391,6 +395,8 @@ class Sprite
 				'width': @w + 'px'
 				'height': @h + 'px'
 				'z-index': Math.ceil @z
+				'background-image' : 'url(' + @image + ')'
+				'background-repeat': 'no-repeat'
 			})
 	
 	update: (modifier) ->
@@ -428,8 +434,8 @@ class Sprite
 			bgi = @getFrame(@current_animation)
 			$(@el).css({
 				'z-index': @z
-				'top': @ry + 'px'
-				'left': @rx + 'px'
+				'top': (@ry - @h + @offset.y) + 'px'
+				'left': (@rx + @offset.x) + 'px'
 				'background-position': '-' + bgi.x + 'px ' + '-' + bgi.y + 'px'
 			})
 
@@ -487,6 +493,16 @@ THE ASTONISHING ENTITIES CLASSES
 
 class Entity extends Sprite
 
+	constructor: (world, x, y, w, h, image, options)->
+		super world, x, y, w, h, image, options
+		@world.entities.push this
+		
+	update: (modifier)->
+		super modifier
+	
+	draw: ->
+		super
+	
 
 ###
 ******************************
@@ -531,3 +547,5 @@ window.onload = ->
 	game.start() 
 	game.world.debug = true
 	game.initiate levels
+	
+	bob = new Entity game.world, 150, 150, 44, 66, 'images/eric.png', {animations: { 'standard': ['a0']}, name: 'bob', offset: {x:-15, y:-8}}
