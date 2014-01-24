@@ -40,6 +40,12 @@ h6 {
   width: 90%;
   margin: 0 auto; }
 
+#center:hover {
+  background-position: -50px 0 !important; }
+
+.tile.hover {
+  background-position: -22px 0 !important; }
+
 .clearfix {
   zoom: 1; }
   .clearfix:before, .clearfix:after {

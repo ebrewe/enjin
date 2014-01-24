@@ -72,6 +72,16 @@ h6 { font-weight:300; }
   margin:0 auto;	
 }
 
+
+#center {
+	
+	&:hover {background-position: -50px 0!important; }	
+}
+
+.tile.hover{
+	background-position: -22px 0!important;
+}
+
 .clearfix {
   zoom: 1;
 	&:before, &:after { content: ""; display: table; }
