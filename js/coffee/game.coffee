@@ -141,7 +141,7 @@ class World
 
 	createPFGrid: (map)->
 		@grid = new PF.Grid( map[0].length, map.length, map)
-		@finder = new PF.BreadthFirstFinder()
+		@finder = new PF.BreadthFirstFinder({allowDiagonal: true})
 		
 	placeTiles: ->
 		world = this
@@ -199,7 +199,7 @@ class World
 			image = ent.image ? false
 			animations = ent.animations ? false
 			offset = ent.offset ? false
-			speed = ent.speed ? false
+			speed = ent.speed ? 0
 			
 			entity = new Entity world, coords.x, coords.y, w, h, image, {name: name, animations: animations, offset: offset, speed: speed}
 			@entities.push entity
@@ -506,6 +506,9 @@ class Tile extends Sprite
 		@current_animation = 'standard'
 		if @flags['hover']
 			@current_animation = 'hover'
+		if @flags['path']
+			@current_animation = 'selected'
+			
 		@ry += @height * (-@world.tileHeight)
 		
 	draw: ->
@@ -539,7 +542,7 @@ class Entity extends Sprite
 
 	constructor: (world, x, y, w, h, image, options)->
 		options.name?= 'entity' 
-		@speed = options.speed ? 0
+		@speed = if options.speed and options.speed > 0 then options.speed else 3
 		@speedX = @speed
 		@speedY = @speed
 		super world, x, y, w, h, image, options
@@ -553,7 +556,13 @@ class Entity extends Sprite
 		super
 	
 	moveTo: (coords)->
-		
+		start = @world.coordsToTile [@x, @y]
+		end = if coords.x then coords else {x:coords[0], y:coords[1]}
+		gridClone = @world.clone @world.grid
+		path = @world.finder.findPath start.x,start.y, end.x, end.y, gridClone
+		for tile in path
+			#console.log @world.map.tiles[tile[0]][tile[1]]
+			@world.map.tiles[tile[0]][tile[1]].tile.setFlags ['path']
 
 ###
 ******************************
@@ -602,4 +611,7 @@ window.onload = ->
 	game.start() 
 	game.world.debug = true
 	game.initiate levels
-	testC = [game.world.map.tiles[10][10].x, game.world.map.tiles[10][10].y]
+	
+	bob = game.world.entities[0]
+	console.log bob.moveTo [5,5]
+	

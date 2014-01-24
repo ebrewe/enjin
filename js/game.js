@@ -232,7 +232,9 @@
 
     World.prototype.createPFGrid = function(map) {
       this.grid = new PF.Grid(map[0].length, map.length, map);
-      return this.finder = new PF.BreadthFirstFinder();
+      return this.finder = new PF.BreadthFirstFinder({
+        allowDiagonal: true
+      });
     };
 
     World.prototype.placeTiles = function() {
@@ -338,7 +340,7 @@
         image = (_ref4 = ent.image) != null ? _ref4 : false;
         animations = (_ref5 = ent.animations) != null ? _ref5 : false;
         offset = (_ref6 = ent.offset) != null ? _ref6 : false;
-        speed = (_ref7 = ent.speed) != null ? _ref7 : false;
+        speed = (_ref7 = ent.speed) != null ? _ref7 : 0;
         entity = new Entity(world, coords.x, coords.y, w, h, image, {
           name: name,
           animations: animations,
@@ -829,6 +831,9 @@
       if (this.flags['hover']) {
         this.current_animation = 'hover';
       }
+      if (this.flags['path']) {
+        this.current_animation = 'selected';
+      }
       return this.ry += this.height * (-this.world.tileHeight);
     };
 
@@ -895,11 +900,11 @@
     __extends(Entity, _super);
 
     function Entity(world, x, y, w, h, image, options) {
-      var _ref, _ref1;
+      var _ref;
       if ((_ref = options.name) == null) {
         options.name = 'entity';
       }
-      this.speed = (_ref1 = options.speed) != null ? _ref1 : 0;
+      this.speed = options.speed && options.speed > 0 ? options.speed : 3;
       this.speedX = this.speed;
       this.speedY = this.speed;
       Entity.__super__.constructor.call(this, world, x, y, w, h, image, options);
@@ -918,7 +923,22 @@
       return Entity.__super__.draw.apply(this, arguments);
     };
 
-    Entity.prototype.moveTo = function(coords) {};
+    Entity.prototype.moveTo = function(coords) {
+      var end, gridClone, path, start, tile, _i, _len, _results;
+      start = this.world.coordsToTile([this.x, this.y]);
+      end = coords.x ? coords : {
+        x: coords[0],
+        y: coords[1]
+      };
+      gridClone = this.world.clone(this.world.grid);
+      path = this.world.finder.findPath(start.x, start.y, end.x, end.y, gridClone);
+      _results = [];
+      for (_i = 0, _len = path.length; _i < _len; _i++) {
+        tile = path[_i];
+        _results.push(this.world.map.tiles[tile[0]][tile[1]].tile.setFlags(['path']));
+      }
+      return _results;
+    };
 
     return Entity;
 
@@ -932,7 +952,7 @@
 
 
   window.onload = function() {
-    var game, gameContainer, levelOne, levels, lvOneMap, lvOneSprites, testC;
+    var bob, game, gameContainer, levelOne, levels, lvOneMap, lvOneSprites;
     console.log('starting');
     lvOneMap = [['x', 'x', 'x', 'x', 'x', 'x', 'x', 'x', 'x', 'x', 'x', 'x', 'x', 'x', 'x', 'x', 'x', 'x', 'x', 'x'], ['x', 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 'x'], ['x', 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 'x'], ['x', 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 'x'], ['x', 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 'x'], ['x', 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 'x'], ['x', 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 'x'], ['x', 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 'x'], ['x', 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 'x'], ['x', 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 'x'], ['x', 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 'x'], ['x', 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 'x'], ['x', 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 'x'], ['x', 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 'x'], ['x', 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 'x'], ['x', 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 'x'], ['x', 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 'x'], ['x', 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 'x'], ['x', 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 'x'], ['x', 'x', 'x', 'x', 'x', 'x', 'x', 'x', 'x', 'x', 'x', 'x', 'x', 'x', 'x', 'x', 'x', 'x', 'x', 'x']];
     lvOneSprites = {
@@ -972,7 +992,8 @@
     game.start();
     game.world.debug = true;
     game.initiate(levels);
-    return testC = [game.world.map.tiles[10][10].x, game.world.map.tiles[10][10].y];
+    bob = game.world.entities[0];
+    return console.log(bob.moveTo([5, 5]));
   };
 
 }).call(this);
