@@ -260,13 +260,13 @@ class InputHandler
 				
 		if @hovering
 			@hovering.setFlags ['hover']
-				
-		if @clicked then console.log @mousePos.x, @mousePos.y, @world.tiles
+			if @clicked then console.log @hovering.row, @hovering.col
 			
 		if @mouseDown
 			@checkDrag()
+		$(@world.el).attr('data-dragging', false)
 		if @dragging
-		
+			$(@world.el).attr('data-dragging', true)
 			dX = (@mousePos.x - @dragStart.x ) 
 			dY = (@mousePos.y - @dragStart.y)
 			if Math.abs( dX ) > 5

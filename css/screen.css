@@ -33,7 +33,7 @@ h6 {
   -ms-user-select: none;
   user-select: none; }
   #game[data-dragging=true] {
-    cursor: move; }
+    cursor: all-scroll; }
 
 .wrapper {
   display: block;

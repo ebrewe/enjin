@@ -61,7 +61,7 @@ h6 { font-weight:300; }
   user-select: none;
   
   &[data-dragging=true] {
-    cursor: move; 
+    cursor: all-scroll; 
   }
 }
 

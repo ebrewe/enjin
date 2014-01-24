@@ -427,14 +427,16 @@
       }
       if (this.hovering) {
         this.hovering.setFlags(['hover']);
-      }
-      if (this.clicked) {
-        console.log(this.mousePos.x, this.mousePos.y, this.world.tiles);
+        if (this.clicked) {
+          console.log(this.hovering.row, this.hovering.col);
+        }
       }
       if (this.mouseDown) {
         this.checkDrag();
       }
+      $(this.world.el).attr('data-dragging', false);
       if (this.dragging) {
+        $(this.world.el).attr('data-dragging', true);
         dX = this.mousePos.x - this.dragStart.x;
         dY = this.mousePos.y - this.dragStart.y;
         if (Math.abs(dX) > 5) {
