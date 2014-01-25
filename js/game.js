@@ -707,6 +707,7 @@
       this.name = (_ref2 = options.name) != null ? _ref2 : 'sprite';
       this.current_frame = 0;
       this.current_animation = 'standard';
+      this.vdir = 1;
       this.fps = (_ref3 = options.fps) != null ? _ref3 : 1000 / 24;
       this.render = (_ref4 = options.render) != null ? _ref4 : true;
       this.animations = {
@@ -741,6 +742,18 @@
     }
 
     Sprite.prototype.update = function(modifier) {
+      if (this.vy > 0) {
+        this.vdir = 1;
+      }
+      if (this.vy < 0) {
+        this.vdir = -1;
+      }
+      if (this.vx > 0) {
+        this.flipElement(-1);
+      }
+      if (this.vx < 0) {
+        this.flipElement(1);
+      }
       this.z = Math.ceil(this.zIndex + (this.y * this.world.tileHeight));
       this.ry = this.y + this.world.scrollY;
       return this.rx = this.x + this.world.scrollX;
@@ -801,6 +814,18 @@
           'top': (this.ry - this.h + this.offset.y) + 'px',
           'left': (this.rx + this.offset.x) + 'px',
           'background-position': '-' + bgi.x + 'px ' + '-' + bgi.y + 'px'
+        });
+      }
+    };
+
+    Sprite.prototype.flipElement = function(direction) {
+      if (this.el) {
+        return $(this.el).css({
+          '-webkit-transform': 'scaleX(' + direction + ')',
+          '-moz-transform': 'scaleX(' + direction + ')',
+          '-o-transform': 'scaleX(' + direction + ')',
+          '-ms-transform': 'scaleX(' + direction + ')',
+          'transform': 'scaleX(' + direction + ')'
         });
       }
     };
@@ -947,9 +972,9 @@
       this.x += this.vx;
       this.y += this.vy;
       if (this.vx === 0 && this.vy === 0) {
-        this.current_animation = 'standard';
+        this.current_animation = this.vdir > 0 ? 'standard' : 'standardUp';
       } else {
-        this.current_animation = 'walking';
+        this.current_animation = this.vdir > 0 ? 'walking' : 'walkingUp';
       }
       Entity.__super__.update.call(this, modifier);
       if (this.world.debug) {
@@ -1057,12 +1082,14 @@
           width: 44,
           height: 44,
           image: 'images/lilSpearGuy.png',
-          speed: 2,
+          speed: 3,
           animations: {
             standard: ['a0'],
-            'walking': ['a0', 'a1']
+            'walking': ['a0', 'a1'],
+            'standardUp': ['a2'],
+            'walkingUp': ['a2', 'a3']
           },
-          fps: 1000 / 5,
+          fps: 1000 / 10,
           offset: {
             x: -15,
             y: 10
@@ -1084,12 +1111,11 @@
     gameContainer = document.getElementById('game');
     game = new Game(gameContainer, 11);
     game.start();
-    game.world.debug = true;
     game.initiate(levels);
     bob = game.world.entities[0];
-    bob.setPath([18, 1]);
+    bob.setPath([18, 18]);
     bob = game.world.entities[1];
-    return bob.setPath([1, 15]);
+    return bob.setPath([1, 2]);
   };
 
 }).call(this);

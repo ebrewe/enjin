@@ -421,6 +421,7 @@ class Sprite
 		@name = options.name ? 'sprite'
 		@current_frame = 0
 		@current_animation = 'standard'
+		@vdir = 1
 		@fps = options.fps ? 1000/24
 		@render = options.render ? true
 		@animations = 
@@ -446,6 +447,11 @@ class Sprite
 			})
 	
 	update: (modifier) ->
+		if @vy > 0 then @vdir = 1
+		if @vy < 0 then @vdir = -1
+		if @vx > 0 then @flipElement(-1)
+		if @vx < 0 then @flipElement(1)
+		
 		@z = Math.ceil @zIndex + (@y * @world.tileHeight)
 		@ry = @y + @world.scrollY
 		@rx = @x + @world.scrollX
@@ -490,6 +496,16 @@ class Sprite
 				'top': (@ry - @h + @offset.y) + 'px'
 				'left': (@rx + @offset.x) + 'px'
 				'background-position': '-' + bgi.x + 'px ' + '-' + bgi.y + 'px'
+			})
+			
+	flipElement: (direction)->
+		if @el
+			$(@el).css({
+				'-webkit-transform': 'scaleX('+direction+')'
+				'-moz-transform': 'scaleX('+direction+')'
+				'-o-transform': 'scaleX('+direction+')'
+				'-ms-transform': 'scaleX('+direction+')'
+				'transform': 'scaleX('+direction+')'
 			})
 
 class Tile extends Sprite
@@ -579,9 +595,9 @@ class Entity extends Sprite
 		@y += @vy
 		
 		if @vx == 0 and @vy == 0
-			@current_animation = 'standard'
+			@current_animation = if @vdir > 0 then 'standard' else 'standardUp' 
 		else
-			@current_animation = 'walking'
+			@current_animation = if @vdir > 0 then 'walking' else 'walkingUp'
 			
 		super modifier
 		if @world.debug
@@ -655,7 +671,7 @@ window.onload = ->
 	]
 	lvOneSprites = 
 		entities: [{ name: 'bob', coords:{x:10, y:10}, width: 44, height:44, image: 'images/lilSpearGuy.png', speed:2, animations:{standard:['a0'], 'walking': ['a0', 'a1']}, offset: {x:-15, y:10}},
-		{ name: 'boby', coords:{x:15, y:10}, width: 44, height:44, image: 'images/lilSpearGuy.png', speed:2, animations:{standard:['a0'], 'walking': ['a0', 'a1']}, fps: 1000/5, offset: {x:-15, y:10}}]
+		{ name: 'boby', coords:{x:15, y:10}, width: 44, height:44, image: 'images/lilSpearGuy.png', speed:3, animations:{standard:['a0'], 'walking': ['a0', 'a1'], 'standardUp': ['a2'], 'walkingUp': ['a2', 'a3'] }, fps: 1000/10, offset: {x:-15, y:10}}]
 	
 	levelOne = 
 		map: lvOneMap
@@ -669,11 +685,11 @@ window.onload = ->
 	
 	game = new Game gameContainer, 11
 	game.start() 
-	game.world.debug = true
+	#game.world.debug = true
 	game.initiate levels
 	
 	bob = game.world.entities[0]
-	bob.setPath [18,1]
+	bob.setPath [18,18]
 	bob = game.world.entities[1]
-	bob.setPath [1,15]
+	bob.setPath [1,2]
 	
