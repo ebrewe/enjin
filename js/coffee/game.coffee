@@ -201,8 +201,13 @@ class World
 			offset = ent.offset ? false
 			speed = ent.speed ? 0
 			fps = ent.fps ? 1000 / 24
+			etype = ent.type ? 'false'
 			
-			entity = new Entity world, coords.x, coords.y, w, h, image, {name: name, animations: animations, offset: offset, speed: speed, fps:fps}
+			if etype == 'vagrant'
+				entity = new Vagrant world, coords.x, coords.y, w, h, image, {name: name, animations: animations, offset: offset, speed: speed, fps:fps}
+			
+			else
+				entity = new Entity world, coords.x, coords.y, w, h, image, {name: name, animations: animations, offset: offset, speed: speed, fps:fps}
 			@entities.push entity
 	
 	
@@ -638,6 +643,44 @@ class Entity extends Sprite
 		if @x >= coords.x - 2 and @x <= coords.x + 2 and @y >= coords.y - 2 and @y <= coords.y + 2
 			return true
 		return false
+		
+class Vagrant extends Entity
+	###
+	wandering npc
+	###
+	constructor: (world, x, y, w, h, image, options) ->
+		@wanderPct = options.wanderPct ? 0.8
+		@wanderRange = options.wanderRange ? {sx:false, ex:false, sy:false, ey:false}
+		super world, x, y, w, h, image, options
+		console.log @vx, @vy
+		
+	update: (modifier)->
+		super modifier
+		if !@target 
+			@wander()
+		
+	wander: ->
+		if Math.random() > @wanderPct
+			@nextTarget = @getRandomTarget @wanderRange
+			@setPath @nextTarget
+				
+	getRandomTarget: (range)->
+		sx = if range.sx then range.sx else 0
+		ex = if range.ex then range.ex else @world.map.rows - 1
+		sy = if range.sy then range.sy else 0
+		ey = if range.ey then range.ey else @world.map.columns - 1
+		
+		
+		xrange = [sx..ex]
+		yrange = [sy..ey]
+		
+		randX = Math.floor( Math.random() * xrange.length )
+		randY = Math.floor( Math.random() * yrange.length )
+		
+		if @world.cMap[xrange[randX]][yrange[randY]] == 0
+			return {x:[xrange[randX]], y:[yrange[randY]]}
+		else 
+			@getRandomTarget range
 
 ###
 ******************************
@@ -670,8 +713,8 @@ window.onload = ->
 		['x','x','x','x','x','x','x','x','x','x','x','x','x','x','x','x','x','x','x','x'],
 	]
 	lvOneSprites = 
-		entities: [{ name: 'bob', coords:{x:10, y:10}, width: 44, height:44, image: 'images/lilSpearGuy.png', speed:2, animations:{standard:['a0'], 'walking': ['a0', 'a1']}, offset: {x:-15, y:10}},
-		{ name: 'boby', coords:{x:15, y:10}, width: 44, height:44, image: 'images/lilSpearGuy.png', speed:3, animations:{standard:['a0'], 'walking': ['a0', 'a1'], 'standardUp': ['a2'], 'walkingUp': ['a2', 'a3'] }, fps: 1000/10, offset: {x:-15, y:10}}]
+		entities: [{ name: 'bob', type:'vagrant', coords:{x:10, y:10}, width: 44, height:44, image: 'images/lilSpearGuy.png', speed:2, animations:{standard:['a0'], 'walking': ['a0', 'a1'], 'standardUp': ['a2'], 'walkingUp': ['a2', 'a3'] }, offset: {x:-15, y:10}},
+		{ name: 'boby', type:'vagrant', coords:{x:15, y:10}, width: 44, height:44, image: 'images/lilSpearGuy.png', speed:3, animations:{standard:['a0'], 'walking': ['a0', 'a1'], 'standardUp': ['a2'], 'walkingUp': ['a2', 'a3'] }, fps: 1000/10, offset: {x:-15, y:10}}]
 	
 	levelOne = 
 		map: lvOneMap
@@ -690,6 +733,8 @@ window.onload = ->
 	
 	bob = game.world.entities[0]
 	bob.setPath [18,18]
-	bob = game.world.entities[1]
-	bob.setPath [1,2]
+	bob.wanderPct = .95
+	boby = game.world.entities[1]
+	boby.setPath [1,2]
+	bob.wanderPct = .97
 	
