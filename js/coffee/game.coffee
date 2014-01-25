@@ -200,8 +200,9 @@ class World
 			animations = ent.animations ? false
 			offset = ent.offset ? false
 			speed = ent.speed ? 0
+			fps = ent.fps ? 1000 / 24
 			
-			entity = new Entity world, coords.x, coords.y, w, h, image, {name: name, animations: animations, offset: offset, speed: speed}
+			entity = new Entity world, coords.x, coords.y, w, h, image, {name: name, animations: animations, offset: offset, speed: speed, fps:fps}
 			@entities.push entity
 	
 	
@@ -424,6 +425,7 @@ class Sprite
 		@render = options.render ? true
 		@animations = 
 			'standard': ['a0']
+		if options.animations then @animations = options.animations
 		if @render
 			sprite = document.createElement('div')
 			sprite.setAttribute('id', @name) unless @name == 'sprite'
@@ -452,13 +454,19 @@ class Sprite
 		if !@frameTime then @frameTime = new Date()
 		now = new Date()
 		fr = @current_frame
-		a = @animations[animation]		
+		a = @animations[animation]	 ? @animations['standard']
 		
-		if now - @frameTime < @fps
+		if !a[fr]
+			@current_frame = 0
+			f = 0 
+		
+		if now - @frameTime < @fps or a.length <= 1 
 			return @processFrame a[fr]
+			
+		@frameTime = now
 		
 		if !a then return {x:0, y:0}
-		if !a[fr] or !a[fr + 1] or a.length <= 1
+		if !a[fr] or !a[fr + 1]
 			@current_frame = 0
 			return @processFrame a[@current_frame]
 		
@@ -467,6 +475,7 @@ class Sprite
 		
 	processFrame: (aframe)->
 		alpha = ['a','b','c','d','e','f','g','h','i','j','k','l','m','n','o','p','q','r','s','t','u','v','w','x','y','z']
+		if !aframe then aframe = @current_animation[0]
 		c = aframe.substring 0, 1
 		r = aframe.substring(1, aframe.length)
 		ex = parseInt(r) * @w
@@ -569,6 +578,10 @@ class Entity extends Sprite
 		@x += @vx
 		@y += @vy
 		
+		if @vx == 0 and @vy == 0
+			@current_animation = 'standard'
+		else
+			@current_animation = 'walking'
 			
 		super modifier
 		if @world.debug
@@ -641,8 +654,8 @@ window.onload = ->
 		['x','x','x','x','x','x','x','x','x','x','x','x','x','x','x','x','x','x','x','x'],
 	]
 	lvOneSprites = 
-		entities: [{ name: 'bob', coords:{x:10, y:10}, width: 44, height:66, image: 'images/eric.png', speed:2, animations:{standard:['a0']}, offset: {x:-15, y:10}},
-		{ name: 'boby', coords:{x:15, y:10}, width: 44, height:66, image: 'images/eric.png', speed:2, animations:{standard:['a0']}, offset: {x:-15, y:10}}]
+		entities: [{ name: 'bob', coords:{x:10, y:10}, width: 44, height:44, image: 'images/lilSpearGuy.png', speed:2, animations:{standard:['a0'], 'walking': ['a0', 'a1']}, offset: {x:-15, y:10}},
+		{ name: 'boby', coords:{x:15, y:10}, width: 44, height:44, image: 'images/lilSpearGuy.png', speed:2, animations:{standard:['a0'], 'walking': ['a0', 'a1']}, fps: 1000/5, offset: {x:-15, y:10}}]
 	
 	levelOne = 
 		map: lvOneMap

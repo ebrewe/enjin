@@ -324,7 +324,7 @@
     };
 
     World.prototype.addEntities = function(entities) {
-      var animations, coords, ent, entity, h, image, name, offset, speed, w, world, _i, _len, _ref, _ref1, _ref2, _ref3, _ref4, _ref5, _ref6, _ref7, _results;
+      var animations, coords, ent, entity, fps, h, image, name, offset, speed, w, world, _i, _len, _ref, _ref1, _ref2, _ref3, _ref4, _ref5, _ref6, _ref7, _ref8, _results;
       world = this;
       _results = [];
       for (_i = 0, _len = entities.length; _i < _len; _i++) {
@@ -341,11 +341,13 @@
         animations = (_ref5 = ent.animations) != null ? _ref5 : false;
         offset = (_ref6 = ent.offset) != null ? _ref6 : false;
         speed = (_ref7 = ent.speed) != null ? _ref7 : 0;
+        fps = (_ref8 = ent.fps) != null ? _ref8 : 1000 / 24;
         entity = new Entity(world, coords.x, coords.y, w, h, image, {
           name: name,
           animations: animations,
           offset: offset,
-          speed: speed
+          speed: speed,
+          fps: fps
         });
         _results.push(this.entities.push(entity));
       }
@@ -710,6 +712,9 @@
       this.animations = {
         'standard': ['a0']
       };
+      if (options.animations) {
+        this.animations = options.animations;
+      }
       if (this.render) {
         sprite = document.createElement('div');
         if (this.name !== 'sprite') {
@@ -742,23 +747,28 @@
     };
 
     Sprite.prototype.getFrame = function(animation) {
-      var a, fr, now;
+      var a, f, fr, now, _ref;
       if (!this.frameTime) {
         this.frameTime = new Date();
       }
       now = new Date();
       fr = this.current_frame;
-      a = this.animations[animation];
-      if (now - this.frameTime < this.fps) {
+      a = (_ref = this.animations[animation]) != null ? _ref : this.animations['standard'];
+      if (!a[fr]) {
+        this.current_frame = 0;
+        f = 0;
+      }
+      if (now - this.frameTime < this.fps || a.length <= 1) {
         return this.processFrame(a[fr]);
       }
+      this.frameTime = now;
       if (!a) {
         return {
           x: 0,
           y: 0
         };
       }
-      if (!a[fr] || !a[fr + 1] || a.length <= 1) {
+      if (!a[fr] || !a[fr + 1]) {
         this.current_frame = 0;
         return this.processFrame(a[this.current_frame]);
       }
@@ -769,6 +779,9 @@
     Sprite.prototype.processFrame = function(aframe) {
       var alpha, c, ex, r, wy;
       alpha = ['a', 'b', 'c', 'd', 'e', 'f', 'g', 'h', 'i', 'j', 'k', 'l', 'm', 'n', 'o', 'p', 'q', 'r', 's', 't', 'u', 'v', 'w', 'x', 'y', 'z'];
+      if (!aframe) {
+        aframe = this.current_animation[0];
+      }
       c = aframe.substring(0, 1);
       r = aframe.substring(1, aframe.length);
       ex = parseInt(r) * this.w;
@@ -933,6 +946,11 @@
       }
       this.x += this.vx;
       this.y += this.vy;
+      if (this.vx === 0 && this.vy === 0) {
+        this.current_animation = 'standard';
+      } else {
+        this.current_animation = 'walking';
+      }
       Entity.__super__.update.call(this, modifier);
       if (this.world.debug) {
         return $(this.el).css({
@@ -1019,11 +1037,12 @@
             y: 10
           },
           width: 44,
-          height: 66,
-          image: 'images/eric.png',
+          height: 44,
+          image: 'images/lilSpearGuy.png',
           speed: 2,
           animations: {
-            standard: ['a0']
+            standard: ['a0'],
+            'walking': ['a0', 'a1']
           },
           offset: {
             x: -15,
@@ -1036,12 +1055,14 @@
             y: 10
           },
           width: 44,
-          height: 66,
-          image: 'images/eric.png',
+          height: 44,
+          image: 'images/lilSpearGuy.png',
           speed: 2,
           animations: {
-            standard: ['a0']
+            standard: ['a0'],
+            'walking': ['a0', 'a1']
           },
+          fps: 1000 / 5,
           offset: {
             x: -15,
             y: 10
