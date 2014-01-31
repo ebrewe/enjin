@@ -233,7 +233,7 @@
     World.prototype.createPFGrid = function(map) {
       this.grid = new PF.Grid(map[0].length, map.length, map);
       return this.finder = new PF.AStarFinder({
-        allowDiagonal: false
+        allowDiagonal: true
       });
     };
 

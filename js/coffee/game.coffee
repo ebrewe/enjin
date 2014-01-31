@@ -141,7 +141,7 @@ class World
 
 	createPFGrid: (map)->
 		@grid = new PF.Grid( map[0].length, map.length, map)
-		@finder = new PF.AStarFinder({allowDiagonal: false})
+		@finder = new PF.AStarFinder({allowDiagonal: true})
 		
 	placeTiles: ->
 		world = this
