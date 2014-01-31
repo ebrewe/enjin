@@ -124,13 +124,13 @@ class World
 			if @map.image == false
 				@map.image = if @square then 'images/square_iso_small.png' else 'images/hextile_iso_v.png'
 		
-			@cMap =@scene.map
-			for row in @cMap
-				for tile in row
-					if row[tile] == 'x' 
-						row[tile] = 1
+			@cMap = @scene.map
+			for rIndex, row of @cMap
+				for cIndex, tile of row
+					if tile == "x" 
+						@cMap[rIndex][cIndex] = 1
 					else
-						row[tile] = 0
+						@cMap[rIndex][cIndex] = 0
 
 			@createPFGrid(@cMap)
 			
@@ -715,11 +715,11 @@ window.onload = ->
 		['x',0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,'x'],
 		['x',0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,'x'],
 		['x',0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,'x'],
-		['x',0,0,0,0,0,0,0,1,1,1,0,0,0,0,0,0,0,0,'x'],
-		['x',0,0,0,0,0,0,0,1,1,1,0,0,0,0,0,0,0,0,'x'],
-		['x',0,0,0,0,0,0,0,1,1,1,0,0,0,0,0,0,0,0,'x'],
-		['x',0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,'x'],
-		['x',0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,'x'],
+		['x',0,0,0,0,0,0,0,1,1,1,1,1,0,0,0,0,0,0,'x'],
+		['x',0,0,0,0,0,0,0,1,2,2,2,1,0,0,0,0,0,0,'x'],
+		['x',0,0,0,0,0,0,0,1,2,3,2,1,0,0,0,0,0,0,'x'],
+		['x',0,0,0,0,0,0,0,1,1,2,2,1,0,0,0,0,0,0,'x'],
+		['x',0,0,0,0,0,0,0,0,1,1,1,1,0,0,0,0,0,0,'x'],
 		['x',0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,'x'],
 		['x',0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,'x'],
 		['x',0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,'x'],
@@ -728,8 +728,8 @@ window.onload = ->
 		['x','x','x','x','x','x','x','x','x','x','x','x','x','x','x','x','x','x','x','x'],
 	]
 	lvOneSprites = 
-		entities: [{ name: 'bob', type:'vagrant', coords:{x:10, y:10}, width: 44, height:44, image: 'images/lilSpearGuy.png', speed:2, animations:{standard:['a0'], 'walking': ['a0', 'a1'], 'standardUp': ['a2'], 'walkingUp': ['a2', 'a3'] },fps: 1000/10, offset: {x:-15, y:10}},
-		{ name: 'boby', type:'vagrant', coords:{x:15, y:10}, width: 44, height:44, image: 'images/lilSpearGuy.png', speed:3, animations:{standard:['a0'], 'walking': ['a0', 'a1'], 'standardUp': ['a2'], 'walkingUp': ['a2', 'a3'] }, fps: 1000/10, offset: {x:-15, y:10}}]
+		entities: [{ name: 'bob', type:'vagrant', coords:{x:5, y:10}, width: 44, height:44, image: 'images/lilSpearGuy.png', speed:2, animations:{standard:['a0'], 'walking': ['a0', 'a1'], 'standardUp': ['a2'], 'walkingUp': ['a2', 'a3'] },fps: 1000/10, offset: {x:-15, y:10}},
+		{ name: 'boby', type:'vagrant', coords:{x:3, y:10}, width: 44, height:44, image: 'images/lilSpearGuy.png', speed:3, animations:{standard:['a0'], 'walking': ['a0', 'a1'], 'standardUp': ['a2'], 'walkingUp': ['a2', 'a3'] }, fps: 1000/10, offset: {x:-15, y:10}}]
 	
 	levelOne = 
 		map: lvOneMap
