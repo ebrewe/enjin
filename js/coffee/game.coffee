@@ -128,9 +128,9 @@ class World
 			for rIndex, row of @cMap
 				for cIndex, tile of row
 					if tile == "x" 
-						@cMap[rIndex][cIndex] = 1
+						@cMap[rIndex][cIndex] = parseInt 1
 					else
-						@cMap[rIndex][cIndex] = 0
+						@cMap[rIndex][cIndex] = parseInt 0
 
 			@createPFGrid(@cMap)
 			
@@ -141,7 +141,7 @@ class World
 
 	createPFGrid: (map)->
 		@grid = new PF.Grid( map[0].length, map.length, map)
-		@finder = new PF.BestFirstFinder({allowDiagonal: true})
+		@finder = new PF.AStarFinder({allowDiagonal: false})
 		
 	placeTiles: ->
 		world = this
@@ -149,9 +149,11 @@ class World
 		if m
 			for rIndex, row of m
 				for cIndex, column of row
-					tile = @map.tiles[rIndex][cIndex]
+					tile = @map.tiles[cIndex][rIndex]
 					tile.tile = new Tile world, tile.x, tile.y, @tileWidth, @tileWidth, @map.image, {row: rIndex, col:cIndex, type:tile.type, offset:{x:0, y:22}, render:true}
+					tile.tile.walkable = @cMap[cIndex][rIndex].walkable
 					@tiles.push tile.tile
+					
 					
 	makePath: (start, end)->
 		gridClone = @clone @grid
@@ -520,15 +522,15 @@ class Tile extends Sprite
 		@col = options.col  ? "0"
 		super world, x, y, w, h, image, options
 		@flags = []
-		@animations = options.animations ? { 'standard': ['a0'], 'hover': ['a1'], 'selected': ['a2']}
+		@animations = options.animations ? { 'standard': ['a0'], 'hover': ['a1'], 'selected': ['a2'], 'nowalk':['a3']}
 		@type = if options.type or options.type == 0 then @getType(options.type) else {height:0}
 		@height = @type.height
-		 
 		if @el
 			$(@el).css({
 				'background': 'url(' + @image + ') no-repeat 0 0'
 				#'border': '1px solid rgba(0,0,0,0.2)'
 			})
+			
 		
 	update: (modifier)->
 		super modifier
@@ -538,6 +540,8 @@ class Tile extends Sprite
 		if @flags['path']
 			@current_animation = 'selected'
 			
+		if @flags['nowalk']
+			@current_animation = 'nowalk'
 		@ry += @height * (-@world.tileHeight)
 		
 	draw: ->
@@ -559,6 +563,7 @@ class Tile extends Sprite
 			@setFlags ['walkable']
 			return {height: tile}
 		else
+			@setFlags ['nowalk']
 			return {height:0}
 			
 ###
@@ -609,6 +614,7 @@ class Entity extends Sprite
 			
 		super modifier
 		@height = @getHeight()
+		@z += @h
 		@ry -= @height * @world.tileHeight
 		
 		if @world.debug
@@ -667,7 +673,7 @@ class Vagrant extends Entity
 		@wanderPct = options.wanderPct ? 0.8
 		@wanderRange = options.wanderRange ? {sx:false, ex:false, sy:false, ey:false}
 		super world, x, y, w, h, image, options
-		console.log @vx, @vy
+		#console.log @vx, @vy
 		
 	update: (modifier)->
 		super modifier
@@ -706,30 +712,30 @@ THE MIND-BOGGLING KICK-OFF CODE
 window.onload = ->
 	console.log 'starting'
 	lvOneMap = [
-		['x','x','x','x','x','x','x','x','x','x','x','x','x','x','x','x','x','x','x','x'],
-		['x',0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,'x'],
-		['x',0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,'x'],
-		['x',0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,'x'],
-		['x',0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,'x'],
-		['x',0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,'x'],
-		['x',0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,'x'],
-		['x',0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,'x'],
-		['x',0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,'x'],
-		['x',0,0,0,0,0,0,0,1,1,1,1,1,0,0,0,0,0,0,'x'],
-		['x',0,0,0,0,0,0,0,1,2,2,2,1,0,0,0,0,0,0,'x'],
-		['x',0,0,0,0,0,0,0,1,2,3,2,1,0,0,0,0,0,0,'x'],
-		['x',0,0,0,0,0,0,0,1,1,2,2,1,0,0,0,0,0,0,'x'],
-		['x',0,0,0,0,0,0,0,0,1,1,1,1,0,0,0,0,0,0,'x'],
-		['x',0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,'x'],
-		['x',0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,'x'],
-		['x',0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,'x'],
-		['x',0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,'x'],
-		['x',0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,'x'],
-		['x','x','x','x','x','x','x','x','x','x','x','x','x','x','x','x','x','x','x','x'],
+	  ['x','x','x','x','x','x','x','x','x','x','x','x','x','x','x','x','x','x','x','x',],
+	  ['x',0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,'x',],
+	  ['x',0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,'x',],
+	  ['x',0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,'x',],
+	  ['x',0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,'x',],
+	  ['x',0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,'x',],
+	  ['x',0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,'x',],
+	  ['x',0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,'x',],
+	  ['x',0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,'x',],
+	  ['x',0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,'x',],
+	  ['x',0,0,0,0,'x','x','x','x','x','x','x','x','x','x','x','x',0,0,'x',],
+	  ['x',0,0,0,0,'x',1,1,1,1,1,1,1,1,1,1,'x',0,0,'x',],
+	  ['x',0,0,0,0,'x',1,1,1,1,1,1,1,1,1,1,'x',0,0,'x',],
+	  ['x',0,0,0,0,'x',1,1,1,1,1,1,1,1,1,1,'x',0,0,'x',],
+	  ['x',0,0,0,0,'x','x','x','x','x','x','x','x','x','x','x','x',0,0,'x',],
+	  ['x',0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,'x',],
+	  ['x',0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,'x',],
+	  ['x',0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,'x',],
+	  ['x',0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,'x',],
+	  ['x','x','x','x','x','x','x','x','x','x','x','x','x','x','x','x','x','x','x','x',],
 	]
 	lvOneSprites = 
-		entities: [{ name: 'bob', type:'vagrant', coords:{x:5, y:10}, width: 44, height:44, image: 'images/lilSpearGuy.png', speed:2, animations:{standard:['a0'], 'walking': ['a0', 'a1'], 'standardUp': ['a2'], 'walkingUp': ['a2', 'a3'] },fps: 1000/10, offset: {x:-15, y:10}},
-		{ name: 'boby', type:'vagrant', coords:{x:3, y:10}, width: 44, height:44, image: 'images/lilSpearGuy.png', speed:3, animations:{standard:['a0'], 'walking': ['a0', 'a1'], 'standardUp': ['a2'], 'walkingUp': ['a2', 'a3'] }, fps: 1000/10, offset: {x:-15, y:10}}]
+		entities: [{ name: 'bob', type:'vagrant', coords:{x:4, y:5}, width: 44, height:44, image: 'images/lilSpearGuy.png', speed:2, animations:{standard:['a0'], 'walking': ['a0', 'a1'], 'standardUp': ['a2'], 'walkingUp': ['a2', 'a3'] },fps: 1000/10, offset: {x:-15, y:10}},
+		{ name: 'boby', type:'vagrant', coords:{x:7, y:14}, width: 44, height:44, image: 'images/lilSpearGuy.png', speed:3, animations:{standard:['a0'], 'walking': ['a0', 'a1'], 'standardUp': ['a2'], 'walkingUp': ['a2', 'a3'] }, fps: 1000/10, offset: {x:-15, y:10}}]
 	
 	levelOne = 
 		map: lvOneMap

@@ -216,9 +216,9 @@
           for (cIndex in row) {
             tile = row[cIndex];
             if (tile === "x") {
-              this.cMap[rIndex][cIndex] = 1;
+              this.cMap[rIndex][cIndex] = parseInt(1);
             } else {
-              this.cMap[rIndex][cIndex] = 0;
+              this.cMap[rIndex][cIndex] = parseInt(0);
             }
           }
         }
@@ -232,8 +232,8 @@
 
     World.prototype.createPFGrid = function(map) {
       this.grid = new PF.Grid(map[0].length, map.length, map);
-      return this.finder = new PF.BestFirstFinder({
-        allowDiagonal: true
+      return this.finder = new PF.AStarFinder({
+        allowDiagonal: false
       });
     };
 
@@ -250,7 +250,7 @@
             _results1 = [];
             for (cIndex in row) {
               column = row[cIndex];
-              tile = this.map.tiles[rIndex][cIndex];
+              tile = this.map.tiles[cIndex][rIndex];
               tile.tile = new Tile(world, tile.x, tile.y, this.tileWidth, this.tileWidth, this.map.image, {
                 row: rIndex,
                 col: cIndex,
@@ -261,6 +261,7 @@
                 },
                 render: true
               });
+              tile.tile.walkable = this.cMap[cIndex][rIndex].walkable;
               _results1.push(this.tiles.push(tile.tile));
             }
             return _results1;
@@ -862,7 +863,8 @@
       this.animations = (_ref2 = options.animations) != null ? _ref2 : {
         'standard': ['a0'],
         'hover': ['a1'],
-        'selected': ['a2']
+        'selected': ['a2'],
+        'nowalk': ['a3']
       };
       this.type = options.type || options.type === 0 ? this.getType(options.type) : {
         height: 0
@@ -883,6 +885,9 @@
       }
       if (this.flags['path']) {
         this.current_animation = 'selected';
+      }
+      if (this.flags['nowalk']) {
+        this.current_animation = 'nowalk';
       }
       return this.ry += this.height * (-this.world.tileHeight);
     };
@@ -928,6 +933,7 @@
           height: tile
         };
       } else {
+        this.setFlags(['nowalk']);
         return {
           height: 0
         };
@@ -992,6 +998,7 @@
       }
       Entity.__super__.update.call(this, modifier);
       this.height = this.getHeight();
+      this.z += this.h;
       this.ry -= this.height * this.world.tileHeight;
       if (this.world.debug) {
         return $(this.el).css({
@@ -1095,7 +1102,6 @@
         ey: false
       };
       Vagrant.__super__.constructor.call(this, world, x, y, w, h, image, options);
-      console.log(this.vx, this.vy);
     }
 
     Vagrant.prototype.update = function(modifier) {
@@ -1154,15 +1160,15 @@
   window.onload = function() {
     var bob, boby, game, gameContainer, levelOne, levels, lvOneMap, lvOneSprites;
     console.log('starting');
-    lvOneMap = [['x', 'x', 'x', 'x', 'x', 'x', 'x', 'x', 'x', 'x', 'x', 'x', 'x', 'x', 'x', 'x', 'x', 'x', 'x', 'x'], ['x', 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 'x'], ['x', 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 'x'], ['x', 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 'x'], ['x', 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 'x'], ['x', 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 'x'], ['x', 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 'x'], ['x', 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 'x'], ['x', 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 'x'], ['x', 0, 0, 0, 0, 0, 0, 0, 1, 1, 1, 1, 1, 0, 0, 0, 0, 0, 0, 'x'], ['x', 0, 0, 0, 0, 0, 0, 0, 1, 2, 2, 2, 1, 0, 0, 0, 0, 0, 0, 'x'], ['x', 0, 0, 0, 0, 0, 0, 0, 1, 2, 3, 2, 1, 0, 0, 0, 0, 0, 0, 'x'], ['x', 0, 0, 0, 0, 0, 0, 0, 1, 1, 2, 2, 1, 0, 0, 0, 0, 0, 0, 'x'], ['x', 0, 0, 0, 0, 0, 0, 0, 0, 1, 1, 1, 1, 0, 0, 0, 0, 0, 0, 'x'], ['x', 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 'x'], ['x', 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 'x'], ['x', 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 'x'], ['x', 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 'x'], ['x', 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 'x'], ['x', 'x', 'x', 'x', 'x', 'x', 'x', 'x', 'x', 'x', 'x', 'x', 'x', 'x', 'x', 'x', 'x', 'x', 'x', 'x']];
+    lvOneMap = [['x', 'x', 'x', 'x', 'x', 'x', 'x', 'x', 'x', 'x', 'x', 'x', 'x', 'x', 'x', 'x', 'x', 'x', 'x', 'x'], ['x', 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 'x'], ['x', 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 'x'], ['x', 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 'x'], ['x', 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 'x'], ['x', 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 'x'], ['x', 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 'x'], ['x', 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 'x'], ['x', 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 'x'], ['x', 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 'x'], ['x', 0, 0, 0, 0, 'x', 'x', 'x', 'x', 'x', 'x', 'x', 'x', 'x', 'x', 'x', 'x', 0, 0, 'x'], ['x', 0, 0, 0, 0, 'x', 1, 1, 1, 1, 1, 1, 1, 1, 1, 1, 'x', 0, 0, 'x'], ['x', 0, 0, 0, 0, 'x', 1, 1, 1, 1, 1, 1, 1, 1, 1, 1, 'x', 0, 0, 'x'], ['x', 0, 0, 0, 0, 'x', 1, 1, 1, 1, 1, 1, 1, 1, 1, 1, 'x', 0, 0, 'x'], ['x', 0, 0, 0, 0, 'x', 'x', 'x', 'x', 'x', 'x', 'x', 'x', 'x', 'x', 'x', 'x', 0, 0, 'x'], ['x', 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 'x'], ['x', 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 'x'], ['x', 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 'x'], ['x', 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 'x'], ['x', 'x', 'x', 'x', 'x', 'x', 'x', 'x', 'x', 'x', 'x', 'x', 'x', 'x', 'x', 'x', 'x', 'x', 'x', 'x']];
     lvOneSprites = {
       entities: [
         {
           name: 'bob',
           type: 'vagrant',
           coords: {
-            x: 5,
-            y: 10
+            x: 4,
+            y: 5
           },
           width: 44,
           height: 44,
@@ -1183,8 +1189,8 @@
           name: 'boby',
           type: 'vagrant',
           coords: {
-            x: 3,
-            y: 10
+            x: 7,
+            y: 14
           },
           width: 44,
           height: 44,
