@@ -150,7 +150,7 @@ class World
 			for rIndex, row of m
 				for cIndex, column of row
 					tile = @map.tiles[rIndex][cIndex]
-					tile.tile = new Tile world, tile.x, tile.y, @tileWidth, @tileWidth, @map.image, {row: rIndex, col:cIndex, type:tile.type, offset:{x:0, y:22}, render:false}
+					tile.tile = new Tile world, tile.x, tile.y, @tileWidth, @tileWidth, @map.image, {row: rIndex, col:cIndex, type:tile.type, offset:{x:0, y:22}, render:true}
 					@tiles.push tile.tile
 					
 	makePath: (start, end)->
@@ -226,7 +226,7 @@ class World
 			coords = {x: coords[0], y: coords[1]}
 		for tile in @tiles
 			if tile.x >= coords.x - 5 and tile.x <= coords.x + 5 and tile.y >= coords.y - 5 and tile.y <= coords.y + 5
-			  return {x: tile.row, y: tile.col}
+			  return {x: tile.row, y: tile.col, h:tile.type}
 		console.log 'no matching tile'
 		return false
 		
@@ -460,7 +460,6 @@ class Sprite
 		@z = Math.ceil @zIndex + (@y * @world.tileHeight)
 		@ry = @y + @world.scrollY
 		@rx = @x + @world.scrollX
-	
 	getFrame: (animation)->
 		if !@frameTime then @frameTime = new Date()
 		now = new Date()
@@ -578,6 +577,8 @@ class Entity extends Sprite
 		@speedX = @speed
 		@speedY = @speed / 2
 		super world, x, y, w, h, image, options
+		@zIndex += (@world.tileHeight - 1)
+		@height = options.height ? @getHeight()
 		
 	update: (modifier)->
 	
@@ -604,13 +605,27 @@ class Entity extends Sprite
 		else
 			@current_animation = if @vdir > 0 then 'walking' else 'walkingUp'
 			
+		
+			
 		super modifier
+		@height = @getHeight()
+		@ry -= @height * @world.tileHeight
+		
 		if @world.debug
 		  $(@el).css({'border':'1px solid black'})
 	
 	draw: ->
 		super
+		
 	
+		
+	getHeight: (hardCoded = false)->
+		if !hardCoded
+			tile = @world.coordsToTile({x:@x, y:@y})
+			if tile.h
+				return tile.h.height
+			return @height
+		return @height
 	setPath: (coords)->
 		start = @world.coordsToTile [@x, @y]
 		end = if coords.x then coords else {x:coords[0], y:coords[1]}
@@ -700,9 +715,9 @@ window.onload = ->
 		['x',0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,'x'],
 		['x',0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,'x'],
 		['x',0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,'x'],
-		['x',0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,'x'],
-		['x',0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,'x'],
-		['x',0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,'x'],
+		['x',0,0,0,0,0,0,0,1,1,1,0,0,0,0,0,0,0,0,'x'],
+		['x',0,0,0,0,0,0,0,1,1,1,0,0,0,0,0,0,0,0,'x'],
+		['x',0,0,0,0,0,0,0,1,1,1,0,0,0,0,0,0,0,0,'x'],
 		['x',0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,'x'],
 		['x',0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,'x'],
 		['x',0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,'x'],
@@ -713,7 +728,7 @@ window.onload = ->
 		['x','x','x','x','x','x','x','x','x','x','x','x','x','x','x','x','x','x','x','x'],
 	]
 	lvOneSprites = 
-		entities: [{ name: 'bob', type:'vagrant', coords:{x:10, y:10}, width: 44, height:44, image: 'images/lilSpearGuy.png', speed:2, animations:{standard:['a0'], 'walking': ['a0', 'a1'], 'standardUp': ['a2'], 'walkingUp': ['a2', 'a3'] }, offset: {x:-15, y:10}},
+		entities: [{ name: 'bob', type:'vagrant', coords:{x:10, y:10}, width: 44, height:44, image: 'images/lilSpearGuy.png', speed:2, animations:{standard:['a0'], 'walking': ['a0', 'a1'], 'standardUp': ['a2'], 'walkingUp': ['a2', 'a3'] },fps: 1000/10, offset: {x:-15, y:10}},
 		{ name: 'boby', type:'vagrant', coords:{x:15, y:10}, width: 44, height:44, image: 'images/lilSpearGuy.png', speed:3, animations:{standard:['a0'], 'walking': ['a0', 'a1'], 'standardUp': ['a2'], 'walkingUp': ['a2', 'a3'] }, fps: 1000/10, offset: {x:-15, y:10}}]
 	
 	levelOne = 
@@ -733,8 +748,8 @@ window.onload = ->
 	
 	bob = game.world.entities[0]
 	bob.setPath [18,18]
-	bob.wanderPct = .95
+	bob.wanderPct = .98
 	boby = game.world.entities[1]
 	boby.setPath [1,2]
-	bob.wanderPct = .97
+	boby.wanderPct = .98
 	

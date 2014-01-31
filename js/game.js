@@ -259,7 +259,7 @@
                   x: 0,
                   y: 22
                 },
-                render: false
+                render: true
               });
               _results1.push(this.tiles.push(tile.tile));
             }
@@ -404,7 +404,8 @@
         if (tile.x >= coords.x - 5 && tile.x <= coords.x + 5 && tile.y >= coords.y - 5 && tile.y <= coords.y + 5) {
           return {
             x: tile.row,
-            y: tile.col
+            y: tile.col,
+            h: tile.type
           };
         }
       }
@@ -953,7 +954,7 @@
     Entity.prototype.vy = 0;
 
     function Entity(world, x, y, w, h, image, options) {
-      var _ref;
+      var _ref, _ref1;
       if ((_ref = options.name) == null) {
         options.name = 'entity';
       }
@@ -961,6 +962,8 @@
       this.speedX = this.speed;
       this.speedY = this.speed / 2;
       Entity.__super__.constructor.call(this, world, x, y, w, h, image, options);
+      this.zIndex += this.world.tileHeight - 1;
+      this.height = (_ref1 = options.height) != null ? _ref1 : this.getHeight();
     }
 
     Entity.prototype.update = function(modifier) {
@@ -988,6 +991,8 @@
         this.current_animation = this.vdir > 0 ? 'walking' : 'walkingUp';
       }
       Entity.__super__.update.call(this, modifier);
+      this.height = this.getHeight();
+      this.ry -= this.height * this.world.tileHeight;
       if (this.world.debug) {
         return $(this.el).css({
           'border': '1px solid black'
@@ -997,6 +1002,24 @@
 
     Entity.prototype.draw = function() {
       return Entity.__super__.draw.apply(this, arguments);
+    };
+
+    Entity.prototype.getHeight = function(hardCoded) {
+      var tile;
+      if (hardCoded == null) {
+        hardCoded = false;
+      }
+      if (!hardCoded) {
+        tile = this.world.coordsToTile({
+          x: this.x,
+          y: this.y
+        });
+        if (tile.h) {
+          return tile.h.height;
+        }
+        return this.height;
+      }
+      return this.height;
     };
 
     Entity.prototype.setPath = function(coords) {
@@ -1131,7 +1154,7 @@
   window.onload = function() {
     var bob, boby, game, gameContainer, levelOne, levels, lvOneMap, lvOneSprites;
     console.log('starting');
-    lvOneMap = [['x', 'x', 'x', 'x', 'x', 'x', 'x', 'x', 'x', 'x', 'x', 'x', 'x', 'x', 'x', 'x', 'x', 'x', 'x', 'x'], ['x', 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 'x'], ['x', 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 'x'], ['x', 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 'x'], ['x', 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 'x'], ['x', 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 'x'], ['x', 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 'x'], ['x', 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 'x'], ['x', 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 'x'], ['x', 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 'x'], ['x', 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 'x'], ['x', 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 'x'], ['x', 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 'x'], ['x', 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 'x'], ['x', 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 'x'], ['x', 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 'x'], ['x', 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 'x'], ['x', 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 'x'], ['x', 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 'x'], ['x', 'x', 'x', 'x', 'x', 'x', 'x', 'x', 'x', 'x', 'x', 'x', 'x', 'x', 'x', 'x', 'x', 'x', 'x', 'x']];
+    lvOneMap = [['x', 'x', 'x', 'x', 'x', 'x', 'x', 'x', 'x', 'x', 'x', 'x', 'x', 'x', 'x', 'x', 'x', 'x', 'x', 'x'], ['x', 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 'x'], ['x', 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 'x'], ['x', 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 'x'], ['x', 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 'x'], ['x', 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 'x'], ['x', 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 'x'], ['x', 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 'x'], ['x', 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 'x'], ['x', 0, 0, 0, 0, 0, 0, 0, 1, 1, 1, 0, 0, 0, 0, 0, 0, 0, 0, 'x'], ['x', 0, 0, 0, 0, 0, 0, 0, 1, 1, 1, 0, 0, 0, 0, 0, 0, 0, 0, 'x'], ['x', 0, 0, 0, 0, 0, 0, 0, 1, 1, 1, 0, 0, 0, 0, 0, 0, 0, 0, 'x'], ['x', 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 'x'], ['x', 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 'x'], ['x', 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 'x'], ['x', 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 'x'], ['x', 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 'x'], ['x', 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 'x'], ['x', 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 'x'], ['x', 'x', 'x', 'x', 'x', 'x', 'x', 'x', 'x', 'x', 'x', 'x', 'x', 'x', 'x', 'x', 'x', 'x', 'x', 'x']];
     lvOneSprites = {
       entities: [
         {
@@ -1151,6 +1174,7 @@
             'standardUp': ['a2'],
             'walkingUp': ['a2', 'a3']
           },
+          fps: 1000 / 10,
           offset: {
             x: -15,
             y: 10
@@ -1197,10 +1221,10 @@
     game.initiate(levels);
     bob = game.world.entities[0];
     bob.setPath([18, 18]);
-    bob.wanderPct = .95;
+    bob.wanderPct = .98;
     boby = game.world.entities[1];
     boby.setPath([1, 2]);
-    return bob.wanderPct = .97;
+    return boby.wanderPct = .98;
   };
 
 }).call(this);
