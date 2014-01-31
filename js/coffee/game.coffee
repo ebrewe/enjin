@@ -141,7 +141,7 @@ class World
 
 	createPFGrid: (map)->
 		@grid = new PF.Grid( map[0].length, map.length, map)
-		@finder = new PF.AStarFinder({allowDiagonal: true})
+		@finder = new PF.AStarFinder({allowDiagonal:false})
 		
 	placeTiles: ->
 		world = this
@@ -712,30 +712,11 @@ THE MIND-BOGGLING KICK-OFF CODE
 window.onload = ->
 	console.log 'starting'
 	lvOneMap = [
-	  ['x','x','x','x','x','x','x','x','x','x','x','x','x','x','x','x','x','x','x','x',],
-	  ['x',0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,'x',],
-	  ['x',0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,'x',],
-	  ['x',0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,'x',],
-	  ['x',0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,'x',],
-	  ['x',0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,'x',],
-	  ['x',0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,'x',],
-	  ['x',0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,'x',],
-	  ['x',0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,'x',],
-	  ['x',0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,'x',],
-	  ['x',0,0,0,0,'x','x','x','x','x','x','x','x','x','x','x','x',0,0,'x',],
-	  ['x',0,0,0,0,'x',1,1,1,1,1,1,1,1,1,1,'x',0,0,'x',],
-	  ['x',0,0,0,0,'x',1,1,1,1,1,1,1,1,1,1,'x',0,0,'x',],
-	  ['x',0,0,0,0,'x',1,1,1,1,1,1,1,1,1,1,'x',0,0,'x',],
-	  ['x',0,0,0,0,'x','x','x','x','x','x','x','x','x','x','x','x',0,0,'x',],
-	  ['x',0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,'x',],
-	  ['x',0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,'x',],
-	  ['x',0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,'x',],
-	  ['x',0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,'x',],
-	  ['x','x','x','x','x','x','x','x','x','x','x','x','x','x','x','x','x','x','x','x',],
+		[0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,],[0,1,1,1,1,1,1,1,1,1,1,1,1,1,0,],[0,1,1,1,1,1,1,1,1,1,1,1,1,1,0,],[0,1,1,1,1,1,1,1,1,1,1,1,1,1,0,],[0,1,1,1,1,1,1,1,1,1,1,1,1,1,0,],[0,1,1,1,1,1,1,1,1,1,1,1,1,1,0,],[0,1,1,1,1,2,2,2,2,1,1,1,1,1,0,],['x','x','x','x','x',2,2,2,2,'x','x','x','x','x','x',],[0,1,1,1,1,2,2,2,2,1,1,1,1,1,0,],[0,1,1,1,1,1,1,1,1,1,1,1,1,1,0,],[0,1,1,1,1,1,1,1,1,1,1,1,1,1,0,],[0,1,1,1,1,1,1,1,1,1,1,1,1,1,0,],[0,1,1,1,1,1,1,1,1,1,1,1,1,1,0,],[0,1,1,1,1,1,1,1,1,1,1,1,1,1,0,],[0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,]
 	]
 	lvOneSprites = 
-		entities: [{ name: 'bob', type:'vagrant', coords:{x:4, y:5}, width: 44, height:44, image: 'images/lilSpearGuy.png', speed:2, animations:{standard:['a0'], 'walking': ['a0', 'a1'], 'standardUp': ['a2'], 'walkingUp': ['a2', 'a3'] },fps: 1000/10, offset: {x:-15, y:10}},
-		{ name: 'boby', type:'vagrant', coords:{x:7, y:14}, width: 44, height:44, image: 'images/lilSpearGuy.png', speed:3, animations:{standard:['a0'], 'walking': ['a0', 'a1'], 'standardUp': ['a2'], 'walkingUp': ['a2', 'a3'] }, fps: 1000/10, offset: {x:-15, y:10}}]
+		entities: [{ name: 'bob', type:'vagrant', coords:{x:4, y:5}, width: 44, height:44, image: 'images/lilSpearGuy.png', speed:1, animations:{standard:['a0'], 'walking': ['a0', 'a1'], 'standardUp': ['a2'], 'walkingUp': ['a2', 'a3'] },fps: 1000/10, offset: {x:-15, y:10}},
+		{ name: 'boby', type:'vagrant', coords:{x:7, y:14}, width: 44, height:44, image: 'images/lilSpearGuy.png', speed:2, animations:{standard:['a0'], 'walking': ['a0', 'a1'], 'standardUp': ['a2'], 'walkingUp': ['a2', 'a3'] }, fps: 1000/10, offset: {x:-15, y:10}}]
 	
 	levelOne = 
 		map: lvOneMap
@@ -754,8 +735,8 @@ window.onload = ->
 	
 	bob = game.world.entities[0]
 	bob.setPath [18,18]
-	bob.wanderPct = .98
+	bob.wanderPct = .99
 	boby = game.world.entities[1]
 	boby.setPath [1,2]
-	boby.wanderPct = .98
+	boby.wanderPct = .99
 	
