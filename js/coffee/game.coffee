@@ -124,13 +124,23 @@ class World
 			if @map.image == false
 				@map.image = if @square then 'images/square_iso_small.png' else 'images/hextile_iso_v.png'
 		
-			@cMap = @scene.map
+			@cMap = []
+			for c in [0..@scene.map[1].length - 1]
+				@cMap[c] = []
+				for r in [0..@scene.map.length - 1]
+					@cMap[c][r] = 'unset'
+			for rIndex, row of @scene.map
+				for cIndex, tile of row
+					@cMap[cIndex][rIndex] = if tile == 'x' then 1 else 0
+					
+			###
 			for rIndex, row of @cMap
 				for cIndex, tile of row
 					if tile == "x" 
 						@cMap[rIndex][cIndex] = parseInt 1
 					else
 						@cMap[rIndex][cIndex] = parseInt 0
+			###
 
 			@createPFGrid(@cMap)
 			
@@ -151,9 +161,7 @@ class World
 				for rIndex, tile of column
 					t = @map.tiles[cIndex][rIndex]
 					t.tile = new Tile world, t.x, t.y, @tileWidth, @tileWidth, @map.image, {row: rIndex, col:cIndex, type:t.type, offset:{x:0, y:22}, render:yes}
-					t.tile.walkable = @cMap[cIndex][rIndex].walkable
 					@tiles.push t.tile
-			
 					
 	makePath: (start, end)->
 		gridClone = @clone @grid
@@ -690,10 +698,9 @@ class Vagrant extends Entity
 				
 	getRandomTarget: (range)->
 		sx = if range.sx then range.sx else 0
-		ex = if range.ex then range.ex else @world.map.rows - 1
+		ex = if range.ex then range.ex else @world.map.rows
 		sy = if range.sy then range.sy else 0
-		ey = if range.ey then range.ey else @world.map.columns - 1
-		
+		ey = if range.ey then range.ey else @world.map.columns
 		
 		xrange = [sx..ex]
 		yrange = [sy..ey]
@@ -701,12 +708,21 @@ class Vagrant extends Entity
 		randX = Math.floor( Math.random() * xrange.length )
 		randY = Math.floor( Math.random() * yrange.length )
 		
+		rx = xrange[randX]
+		ry = yrange[randY]
+		
+		if @world.cMap[rx][ry] == 0
+			return {x: rx, y:ry}
+		else
+			@getRandomTarget range
+		###
 		if !@world.cMap[xrange[randX]][yrange[randY]]
 			return @getRandomTarget range
 		if @world.cMap[xrange[randX]][yrange[randY]] == 0
 			return {x:[xrange[randX]], y:[yrange[randY]]}
 		else 
 			@getRandomTarget range
+		###
 
 ###
 ******************************
@@ -724,7 +740,7 @@ window.onload = ->
 	levelOne = 
 		map: lvOneMap
 		square: true
-		#sprites: lvOneSprites
+		sprites: lvOneSprites
 		scroll: {x:50, y:100}
 		hud: ['frames', 'center']
   
@@ -737,9 +753,7 @@ window.onload = ->
 	game.initiate levels
 	
 	bob = game.world.entities[0]
-	bob.setPath [18,18]
 	bob.wanderPct = .99
 	boby = game.world.entities[1]
-	boby.setPath [1,2]
 	boby.wanderPct = .99
 	

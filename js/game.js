@@ -181,7 +181,7 @@
     };
 
     World.prototype.doScene = function(scene) {
-      var cIndex, rIndex, row, tile, _base, _ref, _ref1, _ref2,
+      var c, cIndex, r, rIndex, row, tile, _base, _i, _j, _ref, _ref1, _ref2, _ref3, _ref4,
         _this = this;
       this.scene = scene != null ? scene : {};
       this.square = this.scene.square;
@@ -209,19 +209,30 @@
         if (this.map.image === false) {
           this.map.image = this.square ? 'images/square_iso_small.png' : 'images/hextile_iso_v.png';
         }
-        this.cMap = this.scene.map;
-        _ref2 = this.cMap;
-        for (rIndex in _ref2) {
-          row = _ref2[rIndex];
-          for (cIndex in row) {
-            tile = row[cIndex];
-            if (tile === "x") {
-              this.cMap[rIndex][cIndex] = parseInt(1);
-            } else {
-              this.cMap[rIndex][cIndex] = parseInt(0);
-            }
+        this.cMap = [];
+        for (c = _i = 0, _ref2 = this.scene.map[1].length - 1; 0 <= _ref2 ? _i <= _ref2 : _i >= _ref2; c = 0 <= _ref2 ? ++_i : --_i) {
+          this.cMap[c] = [];
+          for (r = _j = 0, _ref3 = this.scene.map.length - 1; 0 <= _ref3 ? _j <= _ref3 : _j >= _ref3; r = 0 <= _ref3 ? ++_j : --_j) {
+            this.cMap[c][r] = 'unset';
           }
         }
+        _ref4 = this.scene.map;
+        for (rIndex in _ref4) {
+          row = _ref4[rIndex];
+          for (cIndex in row) {
+            tile = row[cIndex];
+            this.cMap[cIndex][rIndex] = tile === 'x' ? 1 : 0;
+          }
+        }
+        /*
+        			for rIndex, row of @cMap
+        				for cIndex, tile of row
+        					if tile == "x" 
+        						@cMap[rIndex][cIndex] = parseInt 1
+        					else
+        						@cMap[rIndex][cIndex] = parseInt 0
+        */
+
         this.createPFGrid(this.cMap);
         this.placeTiles();
       }
@@ -261,7 +272,6 @@
                 },
                 render: true
               });
-              t.tile.walkable = this.cMap[cIndex][rIndex].walkable;
               _results1.push(this.tiles.push(t.tile));
             }
             return _results1;
@@ -1126,11 +1136,11 @@
     };
 
     Vagrant.prototype.getRandomTarget = function(range) {
-      var ex, ey, randX, randY, sx, sy, xrange, yrange, _i, _j, _results, _results1;
+      var ex, ey, randX, randY, rx, ry, sx, sy, xrange, yrange, _i, _j, _results, _results1;
       sx = range.sx ? range.sx : 0;
-      ex = range.ex ? range.ex : this.world.map.rows - 1;
+      ex = range.ex ? range.ex : this.world.map.rows;
       sy = range.sy ? range.sy : 0;
-      ey = range.ey ? range.ey : this.world.map.columns - 1;
+      ey = range.ey ? range.ey : this.world.map.columns;
       xrange = (function() {
         _results = [];
         for (var _i = sx; sx <= ex ? _i <= ex : _i >= ex; sx <= ex ? _i++ : _i--){ _results.push(_i); }
@@ -1143,17 +1153,25 @@
       }).apply(this);
       randX = Math.floor(Math.random() * xrange.length);
       randY = Math.floor(Math.random() * yrange.length);
-      if (!this.world.cMap[xrange[randX]][yrange[randY]]) {
-        return this.getRandomTarget(range);
-      }
-      if (this.world.cMap[xrange[randX]][yrange[randY]] === 0) {
+      rx = xrange[randX];
+      ry = yrange[randY];
+      if (this.world.cMap[rx][ry] === 0) {
         return {
-          x: [xrange[randX]],
-          y: [yrange[randY]]
+          x: rx,
+          y: ry
         };
       } else {
         return this.getRandomTarget(range);
       }
+      /*
+      		if !@world.cMap[xrange[randX]][yrange[randY]]
+      			return @getRandomTarget range
+      		if @world.cMap[xrange[randX]][yrange[randY]] == 0
+      			return {x:[xrange[randX]], y:[yrange[randY]]}
+      		else 
+      			@getRandomTarget range
+      */
+
     };
 
     return Vagrant;
@@ -1223,6 +1241,7 @@
     levelOne = {
       map: lvOneMap,
       square: true,
+      sprites: lvOneSprites,
       scroll: {
         x: 50,
         y: 100
@@ -1235,10 +1254,8 @@
     game.start();
     game.initiate(levels);
     bob = game.world.entities[0];
-    bob.setPath([18, 18]);
     bob.wanderPct = .99;
     boby = game.world.entities[1];
-    boby.setPath([1, 2]);
     return boby.wanderPct = .99;
   };
 
