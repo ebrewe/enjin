@@ -147,13 +147,13 @@ class World
 		world = this
 		m = @map.tiles ? false
 		if m
-			for rIndex, row of m
-				for cIndex, column of row
-					tile = @map.tiles[cIndex][rIndex]
-					tile.tile = new Tile world, tile.x, tile.y, @tileWidth, @tileWidth, @map.image, {row: rIndex, col:cIndex, type:tile.type, offset:{x:0, y:22}, render:true}
-					tile.tile.walkable = @cMap[cIndex][rIndex].walkable
-					@tiles.push tile.tile
-					
+			for cIndex, column of m
+				for rIndex, tile of column
+					t = @map.tiles[cIndex][rIndex]
+					t.tile = new Tile world, t.x, t.y, @tileWidth, @tileWidth, @map.image, {row: rIndex, col:cIndex, type:t.type, offset:{x:0, y:22}, render:yes}
+					t.tile.walkable = @cMap[cIndex][rIndex].walkable
+					@tiles.push t.tile
+			
 					
 	makePath: (start, end)->
 		gridClone = @clone @grid
@@ -249,22 +249,25 @@ class World
 class LevelMap
 
 	constructor: (@map, @tileWidth, @tileHeight, @square)->
-		@columns = @map.length
-		@rows = @map[0].length
-		@tiles = {}
+		@rows = @map.length - 1
+		@columns = @map[1].length - 1
+		@tiles = []
 		@build()
 
 	build: ->
+		for c in [0..@columns]
+			@tiles[c] = []
+			for r in [0..@rows]
+				@tiles[c][r] = {set:false}
 		for rIndex, row of @map
-			@tiles[rIndex] = {}
-			for cIndex, column of row
+			for cIndex, tile of row
 				tx = cIndex * @tileWidth
 				ty = rIndex * @tileHeight
 				
 				coords = @toIso tx, ty, rIndex, cIndex
+				@tiles[cIndex][rIndex] = {x:coords.x, y:coords.y, type: tile}
 				
-				@tiles[rIndex][cIndex] = {x: coords.x, y:coords.y,type: column, }
-
+				
 	toIso: (x, y, r, c)->
 		if @square
 			dx = x / 2 + ((@rows - r) * (@tileWidth/2 ))
@@ -698,6 +701,8 @@ class Vagrant extends Entity
 		randX = Math.floor( Math.random() * xrange.length )
 		randY = Math.floor( Math.random() * yrange.length )
 		
+		if !@world.cMap[xrange[randX]][yrange[randY]]
+			return @getRandomTarget range
 		if @world.cMap[xrange[randX]][yrange[randY]] == 0
 			return {x:[xrange[randX]], y:[yrange[randY]]}
 		else 
@@ -711,9 +716,7 @@ THE MIND-BOGGLING KICK-OFF CODE
 
 window.onload = ->
 	console.log 'starting'
-	lvOneMap = [
-		[0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,],[0,1,1,1,1,1,1,1,1,1,1,1,1,1,0,],[0,1,1,1,1,1,1,1,1,1,1,1,1,1,0,],[0,1,1,1,1,1,1,1,1,1,1,1,1,1,0,],[0,1,1,1,1,1,1,1,1,1,1,1,1,1,0,],[0,1,1,1,1,1,1,1,1,1,1,1,1,1,0,],[0,1,1,1,1,2,2,2,2,1,1,1,1,1,0,],['x','x','x','x','x',2,2,2,2,'x','x','x','x','x','x',],[0,1,1,1,1,2,2,2,2,1,1,1,1,1,0,],[0,1,1,1,1,1,1,1,1,1,1,1,1,1,0,],[0,1,1,1,1,1,1,1,1,1,1,1,1,1,0,],[0,1,1,1,1,1,1,1,1,1,1,1,1,1,0,],[0,1,1,1,1,1,1,1,1,1,1,1,1,1,0,],[0,1,1,1,1,1,1,1,1,1,1,1,1,1,0,],[0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,]
-	]
+	lvOneMap = [[0,"x","x","x","x","x","x","x","x","x","x","x","x","x","x","x","x","x","x","x","x","x","x","x","x","x","x","x","x","x","x","x","x","x","x","x","x","x","x","x",0,],[0,"x",9,9,9,9,9,9,9,9,9,9,9,9,9,9,9,9,9,9,9,9,9,9,9,9,9,9,9,9,9,9,9,9,9,9,9,9,9,"x",0,],[0,"x",9,9,9,9,9,9,9,9,9,9,9,9,9,9,9,9,9,9,9,9,9,9,9,9,9,9,9,9,9,9,9,9,9,9,9,9,9,"x",0,],[0,"x",9,9,9,9,9,9,"x","x","x","x","x","x","x","x","x","x","x","x","x","x","x","x","x","x","x","x","x","x","x","x","x",9,9,9,9,9,9,"x",0,],[0,"x",9,9,9,9,9,9,"x","x","x","x","x","x","x","x","x","x","x","x","x","x","x","x","x","x","x","x","x","x","x","x","x",9,9,9,9,9,9,"x",0,],[0,"x",9,9,9,9,9,9,"x","x","x","x","x","x","x","x","x","x","x","x","x","x","x","x","x","x","x","x","x","x","x","x","x",9,9,9,9,9,9,"x",0,],[0,"x",9,9,9,9,9,9,9,8,8,7,7,6,6,6,6,6,6,6,6,6,6,6,6,6,6,6,7,7,8,8,9,9,9,9,9,9,9,"x",0,],[0,0,"x",9,9,9,9,9,9,8,8,7,7,6,6,6,6,6,6,6,6,6,6,6,6,6,6,6,7,7,8,8,9,9,9,9,9,9,"x","x",0,],[0,0,"x",9,9,9,9,9,9,8,8,7,7,6,6,6,6,6,6,6,6,6,6,6,6,6,6,6,7,7,8,8,9,9,9,9,9,9,"x",0,0,],[0,0,"x","x","x","x","x","x","x","x","x","x","x",6,6,6,6,6,6,6,6,6,6,6,6,6,6,6,"x","x","x","x","x","x","x","x","x","x",0,0,0,],[0,0,0,0,0,0,0,0,0,0,0,0,"x",6,6,6,6,6,6,6,6,6,6,6,6,6,6,6,"x",0,0,0,0,0,0,0,0,0,0,0,0,],[0,0,0,0,0,0,0,0,0,0,0,0,"x",6,6,6,6,6,6,6,6,6,6,6,6,6,6,6,"x",0,0,0,0,0,0,0,0,0,0,0,0,],[0,0,0,0,0,0,0,0,0,0,0,0,"x",5,5,5,5,"x","x","x","x","x","x","x",5,5,5,5,"x",0,0,0,0,0,0,0,0,0,0,0,0,],[0,0,0,0,0,0,0,0,0,0,0,"x",4,5,5,5,5,"x",0,0,0,0,0,"x",5,5,5,5,4,"x",0,0,0,0,0,0,0,0,0,0,0,],[0,0,0,0,0,0,0,0,"x","x","x",3,4,4,4,"x","x",0,0,0,0,0,0,"x","x","x",4,4,4,3,"x","x","x",0,0,0,0,0,0,0,0,],[0,0,0,0,0,0,1,1,2,2,3,3,4,4,4,"x",0,0,0,0,0,0,0,0,0,"x",4,4,4,3,3,2,2,1,1,0,0,0,0,0,0,],[0,0,0,0,0,0,1,1,2,2,3,3,3,3,"x",0,0,0,0,0,0,0,0,0,0,0,"x",3,3,3,3,2,2,1,1,0,0,0,0,0,0,],[0,0,0,0,0,0,1,1,2,2,3,3,3,"x",0,0,0,0,0,0,0,0,0,0,0,0,0,"x",3,3,3,2,2,1,1,0,0,0,0,0,0,],[0,0,0,0,0,0,1,1,2,2,2,2,"x",0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,"x",2,2,2,2,1,1,0,0,0,0,0,0,],[0,0,0,0,0,0,1,1,1,1,1,"x",0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,"x",1,1,1,1,1,0,0,0,0,0,0,],[0,0,0,0,0,0,1,1,1,1,1,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,1,1,1,1,1,0,0,0,0,0,0,],[0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,],[0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,],[0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,],[0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,],]
 	lvOneSprites = 
 		entities: [{ name: 'bob', type:'vagrant', coords:{x:4, y:5}, width: 44, height:44, image: 'images/lilSpearGuy.png', speed:1, animations:{standard:['a0'], 'walking': ['a0', 'a1'], 'standardUp': ['a2'], 'walkingUp': ['a2', 'a3'] },fps: 1000/10, offset: {x:-15, y:10}},
 		{ name: 'boby', type:'vagrant', coords:{x:7, y:14}, width: 44, height:44, image: 'images/lilSpearGuy.png', speed:2, animations:{standard:['a0'], 'walking': ['a0', 'a1'], 'standardUp': ['a2'], 'walkingUp': ['a2', 'a3'] }, fps: 1000/10, offset: {x:-15, y:10}}]
@@ -721,7 +724,7 @@ window.onload = ->
 	levelOne = 
 		map: lvOneMap
 		square: true
-		sprites: lvOneSprites
+		#sprites: lvOneSprites
 		scroll: {x:50, y:100}
 		hud: ['frames', 'center']
   
